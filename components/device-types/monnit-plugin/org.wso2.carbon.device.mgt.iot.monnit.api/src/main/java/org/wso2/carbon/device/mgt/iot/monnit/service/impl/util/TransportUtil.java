@@ -14,21 +14,6 @@ public class TransportUtil {
 
     private static final Log log = LogFactory.getLog(TransportUtil.class);
 
-    static {
-        //for localhost testing only
-        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
-                new javax.net.ssl.HostnameVerifier(){
-
-                    public boolean verify(String hostname,
-                            javax.net.ssl.SSLSession sslSession) {
-                        if (hostname.equals("localhost")) {
-                            return true;
-                        }
-                        return false;
-                    }
-                });
-    }
-
 //    public static HttpsURLConnection getHttpConnection(String urlString) throws
 //            TransportHandlerException {
 //        URL connectionUrl;

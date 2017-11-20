@@ -4,8 +4,13 @@ import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xerces.dom.ElementNSImpl;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.device.mgt.common.Device;
+import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
+import org.wso2.carbon.device.mgt.common.DeviceManagementException;
+import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
+import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiSensor;
-import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiSensorList;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitResponse;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.Result;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.constants.Constants;
@@ -19,97 +24,87 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 public class APIUtil {
     private static Log log = LogFactory.getLog(APIUtil.class);
 
+    //carbon user service
+
+    public static String getAuthenticatedUser() {
+        PrivilegedCarbonContext threadLocalCarbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        String username = threadLocalCarbonContext.getUsername();
+        String tenantDomain = threadLocalCarbonContext.getTenantDomain();
+        if (username.endsWith(tenantDomain)) {
+            return username.substring(0, username.lastIndexOf("@"));
+        }
+        return username;
+    }
+
+    public static DeviceManagementProviderService getDeviceManagementService() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        DeviceManagementProviderService deviceManagementProviderService =
+                (DeviceManagementProviderService) ctx.getOSGiService(DeviceManagementProviderService.class, null);
+        if (deviceManagementProviderService == null) {
+            String msg = "Device Management service has not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return deviceManagementProviderService;
+    }
+
     //TODO get token from the ui web app
-    public static String getAuthToken() {
-
-//        HttpsURLConnection httpsConnection;
-        HttpURLConnection httpsConnection;
-        MonnitResponse responseObj;
+    public static String getAuthToken(String username, String password) {
         String response = "";
-        try {
-            Map<String, String> credMap = new HashedMap();
-            credMap.put("username", "sameera.lakruwan");
-            credMap.put("password", "Sniper123");
-            String url  = TransportUtil.getURI(Constants.TOKEN_EP, credMap);
-            httpsConnection = TransportUtil.getHttpConnection(url);
-            httpsConnection.setRequestMethod(Constants.HTTP_GET);
-            httpsConnection.setRequestProperty("Accept", "text/xml");
-
-            int status = httpsConnection.getResponseCode();
-//            log.info(status);
-            if(status == 200) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(
-                        httpsConnection.getInputStream()));
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    response += inputLine;
-                }
-                in.close();
-                responseObj = generateResponseObj(response);
-                response = (String) responseObj.getResult();
-            }
-        } catch (TransportHandlerException e) {
-            log.error("Error occurred while establishing HTTP connection.", e);
-        } catch (ProtocolException e) {
-            log.error("Protocol specific error occurred when trying to set method to " + Constants.HTTP_GET, e);
-        } catch (IOException e) {
-            log.error("Error occurred while sending the request.", e);
-        } catch (JAXBException e) {
-            log.error("Error occurred while parsing xml response.", e);
-        }
+        Map<String, String> credMap = new HashedMap();
+        credMap.put("username", username);
+        credMap.put("password", password);
+        String url  = TransportUtil.getURI(Constants.TOKEN_EP, credMap);
+        MonnitResponse responseObj = getResponse(url);
         return response;
     }
 
-    public static String getMonnitResponse(String token) {
-//        HttpsURLConnection httpsConnection;
-        HttpURLConnection httpsConnection;
-        MonnitResponse responseObj;
+    public static String getSensorsList(String token, String name, String applicationId) {
         String response = "";
-        try {
-            Map<String, String> credMap = new HashedMap();
-            String url  = TransportUtil.getURI(Constants.SENSOR_LIST, token, credMap);
-            log.info(url);
-            httpsConnection = TransportUtil.getHttpConnection(url);
-            httpsConnection.setRequestMethod(Constants.HTTP_GET);
-            httpsConnection.setRequestProperty("Accept", "text/xml");
-
-            int status = httpsConnection.getResponseCode();
-            if(status == 200) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(
-                        httpsConnection.getInputStream()));
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    response += inputLine;
-                }
-                responseObj = generateResponseObj(response);
-                generateResultObj(responseObj);
-//                response = responseObj.getResult();
-                in.close();
-            }
-        } catch (TransportHandlerException e) {
-            log.error("Error occurred while establishing HTTP connection.", e);
-        } catch (ProtocolException e) {
-            log.error("Protocol specific error occurred when trying to set method to " + Constants.HTTP_GET, e);
-        } catch (IOException e) {
-            log.error("Error occurred while sending the request.", e);
-        } catch (JAXBException e) {
-            log.error("Error occurred while parsing xml response.", e);
-        }
+        Map<String, String> paramMap = new HashedMap();
+        paramMap.put("name", name);
+        paramMap.put("applicationID", applicationId);
+        String url  = TransportUtil.getURI(Constants.SENSOR_LIST, token, paramMap);
+        MonnitResponse responseObj = getResponse(url);
         return response;
     }
 
-    private static MonnitResponse generateResponseObj(String resp) throws JAXBException {
-        JAXBContext ctx = JAXBContext.newInstance(MonnitResponse.class);
-        Unmarshaller unmarshaller = ctx.createUnmarshaller();
-        StringReader reader = new StringReader(resp);
-        MonnitResponse respObj = (MonnitResponse) unmarshaller.unmarshal(reader);
-        return respObj;
+    public static boolean registerDevice(String token, String networkId, String sensorId, String checkDigit) {
+        Map<String, String> paramMap = new HashedMap();
+        paramMap.put("networkID", networkId);
+        paramMap.put("sensorID", sensorId);
+        paramMap.put("checkDigit", checkDigit);
+        String url = TransportUtil.getURI(Constants.REG_SENSOR_EP, token, paramMap);
+        MonnitResponse responseObj = getResponse(url);
+        DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
+        deviceIdentifier.setId(sensorId);
+        deviceIdentifier.setType(Constants.DEVICE_TYPE);
+        try {
+            if (APIUtil.getDeviceManagementService().isEnrolled(deviceIdentifier)) {
+                return false;
+            }
+            Device device = new Device();
+            device.setDeviceIdentifier(sensorId);
+            EnrolmentInfo enrolmentInfo = new EnrolmentInfo();
+            enrolmentInfo.setDateOfEnrolment(new Date().getTime());
+            enrolmentInfo.setDateOfLastUpdate(new Date().getTime());
+            enrolmentInfo.setStatus(EnrolmentInfo.Status.ACTIVE);
+            enrolmentInfo.setOwnership(EnrolmentInfo.OwnerShip.BYOD);
+            device.setName(checkDigit);
+            device.setType(Constants.DEVICE_TYPE);
+            enrolmentInfo.setOwner(APIUtil.getAuthenticatedUser());
+            device.setEnrolmentInfo(enrolmentInfo);
+            return APIUtil.getDeviceManagementService().enrollDevice(device);
+        } catch (DeviceManagementException e) {
+            return false;
+        }
     }
 
     private static MonnitResponse generateResultObj(MonnitResponse resp) throws JAXBException {
@@ -124,4 +119,40 @@ public class APIUtil {
         }
         return null;
     }
+
+    private static MonnitResponse getResponse(String url) {
+        HttpURLConnection httpsConnection;
+        MonnitResponse responseObj = null;
+        String response = "";
+        try {
+            httpsConnection = TransportUtil.getHttpConnection(url);
+            httpsConnection.setRequestMethod(Constants.HTTP_GET);
+            httpsConnection.setRequestProperty("Accept", "text/xml");
+
+            int status = httpsConnection.getResponseCode();
+            if(status == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        httpsConnection.getInputStream()));
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response += inputLine;
+                }
+                in.close();
+                JAXBContext ctx = JAXBContext.newInstance(MonnitResponse.class);
+                Unmarshaller unmarshaller = ctx.createUnmarshaller();
+                StringReader reader = new StringReader(response);
+                responseObj = (MonnitResponse) unmarshaller.unmarshal(reader);
+            }
+        } catch (TransportHandlerException e) {
+            log.error("Error occurred while establishing HTTP connection.", e);
+        } catch (ProtocolException e) {
+            log.error("Protocol specific error occurred when trying to set method to " + Constants.HTTP_GET, e);
+        } catch (IOException e) {
+            log.error("Error occurred while sending the request.", e);
+        } catch (JAXBException e) {
+            log.error("Error occurred while parsing xml response.", e);
+        }
+        return  responseObj;
+    }
+
 }
