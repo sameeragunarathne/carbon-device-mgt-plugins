@@ -27,4 +27,40 @@
 -->
 <PermissionConfiguration>
     <APIVersion></APIVersion>
+
+    <Permission>
+        <name>Get device</name>
+        <path>/device-mgt/monnit/user</path>
+        <url>/monnit/*</url>
+        <method>GET</method>
+        <scope>monnit_user</scope>
+    </Permission>
+    <Permission>
+        <name>Remove device</name>
+        <path>/device-mgt/monnit/user</path>
+        <url>/monnit/*</url>
+        <method>DELETE</method>
+        <scope>monnit_user</scope>
+    </Permission>
+    <Permission>
+        <name>Get sensors</name>
+        <path>/device-mgt/monnit/user</path>
+        <url>/monnit/*/sensors</url>
+        <method>GET</method>
+        <scope>monnit_user</scope>
+    </Permission>
+    <Permission>
+        <name>add sensor</name>
+        <path>/device-mgt/monnit/user</path>
+        <url>/monnit/*/sensors</url>
+        <method>POST</method>
+        <scope>monnit_user</scope>
+    </Permission>
+    <Permission>
+        <name>get auth token</name>
+        <path>/device-mgt/monnit/user</path>
+        <url>/monnit/auth-token</url>
+        <method>GET</method>
+        <scope>monnit_user</scope>
+    </Permission>
 </PermissionConfiguration>

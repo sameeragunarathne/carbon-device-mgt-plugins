@@ -19,21 +19,21 @@
     <!--TODO enable -->
     <context-param>
         <param-name>doAuthentication</param-name>
-        <param-value>false</param-value>
+        <param-value>true</param-value>
     </context-param>
 	<context-param>
 		<param-name>isSharedWithAllTenants</param-name>
 		<param-value>true</param-value>
 	</context-param>
-    <!--&lt;!&ndash;publish to apim&ndash;&gt;-->
-    <!--<context-param>-->
-        <!--<param-name>managed-api-enabled</param-name>-->
-        <!--<param-value>true</param-value>-->
-    <!--</context-param>-->
+    <!--publish to apim-->
+    <context-param>
+        <param-name>managed-api-enabled</param-name>
+        <param-value>true</param-value>
+    </context-param>
 
-    <!--<listener>-->
-        <!--<listener-class>org.wso2.carbon.device.mgt.iot.arduino.service.impl.listener.ArduinoPermissionUpdateListener-->
-        <!--</listener-class>-->
-    <!--</listener>-->
+    <listener>
+        <listener-class>org.wso2.carbon.device.mgt.iot.monnit.service.impl.listener.MonnitPermissionUpdateListener
+        </listener-class>
+    </listener>
 
 </web-app>

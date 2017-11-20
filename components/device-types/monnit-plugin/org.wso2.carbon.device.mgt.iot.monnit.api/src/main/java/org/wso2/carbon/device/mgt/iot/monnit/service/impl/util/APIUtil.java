@@ -9,6 +9,7 @@ import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.DeviceManagementException;
 import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
+import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiSensor;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitResponse;
@@ -24,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -78,31 +80,46 @@ public class APIUtil {
 
     public static boolean registerDevice(String token, String networkId, String sensorId, String checkDigit) {
         Map<String, String> paramMap = new HashedMap();
-        paramMap.put("networkID", networkId);
-        paramMap.put("sensorID", sensorId);
-        paramMap.put("checkDigit", checkDigit);
+        paramMap.put(Constants.NETWORK_ID, networkId);
+        paramMap.put(Constants.SENSOR_ID, sensorId);
+        paramMap.put(Constants.CHECK_DIGIT, checkDigit);
         String url = TransportUtil.getURI(Constants.REG_SENSOR_EP, token, paramMap);
         MonnitResponse responseObj = getResponse(url);
-        DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
-        deviceIdentifier.setId(sensorId);
-        deviceIdentifier.setType(Constants.DEVICE_TYPE);
-        try {
-            if (APIUtil.getDeviceManagementService().isEnrolled(deviceIdentifier)) {
+
+        if(responseObj != null && responseObj.getResult().equals("Success")) {
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
+            deviceIdentifier.setId(sensorId);
+            deviceIdentifier.setType(Constants.DEVICE_TYPE);
+            try {
+                if (APIUtil.getDeviceManagementService().isEnrolled(deviceIdentifier)) {
+                    return false;
+                }
+                Device device = new Device();
+                device.setDeviceIdentifier(deviceIdentifier.getId());
+                EnrolmentInfo enrolmentInfo = new EnrolmentInfo();
+                enrolmentInfo.setDateOfEnrolment(new Date().getTime());
+                enrolmentInfo.setDateOfLastUpdate(new Date().getTime());
+                enrolmentInfo.setStatus(EnrolmentInfo.Status.ACTIVE);
+                enrolmentInfo.setOwnership(EnrolmentInfo.OwnerShip.BYOD);
+                device.setName(checkDigit);
+                device.setType(Constants.DEVICE_TYPE);
+                enrolmentInfo.setOwner(APIUtil.getAuthenticatedUser());
+                device.setEnrolmentInfo(enrolmentInfo);
+                Device.Property checkDigitProperty = new Device.Property();
+                checkDigitProperty.setName(Constants.CHECK_DIGIT);
+                checkDigitProperty.setValue(checkDigit);
+
+                List<Device.Property> propertyList = new ArrayList<>();
+                propertyList.add(checkDigitProperty);
+                device.setProperties(propertyList);
+
+                return APIUtil.getDeviceManagementService().enrollDevice(device);
+            } catch (DeviceManagementException e) {
+                log.error("Exception occurred when registering device in IoT server", e);
                 return false;
             }
-            Device device = new Device();
-            device.setDeviceIdentifier(sensorId);
-            EnrolmentInfo enrolmentInfo = new EnrolmentInfo();
-            enrolmentInfo.setDateOfEnrolment(new Date().getTime());
-            enrolmentInfo.setDateOfLastUpdate(new Date().getTime());
-            enrolmentInfo.setStatus(EnrolmentInfo.Status.ACTIVE);
-            enrolmentInfo.setOwnership(EnrolmentInfo.OwnerShip.BYOD);
-            device.setName(checkDigit);
-            device.setType(Constants.DEVICE_TYPE);
-            enrolmentInfo.setOwner(APIUtil.getAuthenticatedUser());
-            device.setEnrolmentInfo(enrolmentInfo);
-            return APIUtil.getDeviceManagementService().enrollDevice(device);
-        } catch (DeviceManagementException e) {
+        } else {
+            log.error("Exception occurred when registering device in iMonnit cloud");
             return false;
         }
     }
