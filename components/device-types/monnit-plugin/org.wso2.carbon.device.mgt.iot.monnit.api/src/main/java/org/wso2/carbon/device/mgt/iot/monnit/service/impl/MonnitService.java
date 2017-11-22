@@ -8,6 +8,7 @@ import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.annotations.Tag;
 import org.wso2.carbon.apimgt.annotations.api.Scope;
 import org.wso2.carbon.apimgt.annotations.api.Scopes;
+import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitDevice;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -62,6 +63,23 @@ public interface MonnitService {
     )
     Response getAllSensors(@PathParam("token")String token, @QueryParam("name") String name, @QueryParam("applicationID") String applicationId);
 
+    @GET
+    @Path("/monnit/{token}/gateways")
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get all gateways",
+            notes = "",
+            response = Response.class,
+            tags = "monnit",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:monnit:enroll")
+                    })
+            }
+    )
+    Response getAllGateways(@PathParam("token")String token, @QueryParam("name") String name);
+
     @POST
     @Path("/monnit/{token}/sensors")
     @ApiOperation(
@@ -77,7 +95,24 @@ public interface MonnitService {
                     })
             }
     )
-    Response assignSensor(@PathParam("token")String token, @QueryParam("networkID") String networkId, @QueryParam("sensorID") String sensorId, @QueryParam("checkDigit") String checkDigit);
+    Response assignSensor(@PathParam("token")String token,  MonnitDevice device);
+
+    @POST
+    @Path("/monnit/{token}/gateways")
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            httpMethod = "POST",
+            value = "Assign a gateway",
+            notes = "",
+            response = Response.class,
+            tags = "monnit",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:monnit:enroll")
+                    })
+            }
+    )
+    Response assignGateway(@PathParam("token")String token,  MonnitDevice device);
 
     @GET
     @Path("/monnit/auth-token")

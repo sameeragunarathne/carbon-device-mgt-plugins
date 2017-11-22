@@ -9,16 +9,6 @@ import java.util.List;
 @XmlRootElement(name = "Result")
 public class Result {
     private List<ApiSensor> apiSensors;
-    private String value;
-
-    @XmlValue
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
 
     @XmlElementWrapper(name = "APISensorList")
     @XmlElement(name = "APISensor")

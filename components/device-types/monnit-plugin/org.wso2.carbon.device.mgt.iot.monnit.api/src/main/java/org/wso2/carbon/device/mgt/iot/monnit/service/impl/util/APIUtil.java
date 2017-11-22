@@ -3,17 +3,12 @@ package org.wso2.carbon.device.mgt.iot.monnit.service.impl.util;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.xerces.dom.ElementNSImpl;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.carbon.device.mgt.common.Device;
-import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
-import org.wso2.carbon.device.mgt.common.DeviceManagementException;
-import org.wso2.carbon.device.mgt.common.EnrolmentInfo;
 import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
+import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceDetailsMgtException;
+import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceInformationManager;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
-import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiSensor;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitResponse;
-import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.Result;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.constants.Constants;
 
 import javax.xml.bind.JAXBContext;
@@ -25,16 +20,12 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 public class APIUtil {
     private static Log log = LogFactory.getLog(APIUtil.class);
 
     //carbon user service
-
     public static String getAuthenticatedUser() {
         PrivilegedCarbonContext threadLocalCarbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
         String username = threadLocalCarbonContext.getUsername();
@@ -59,85 +50,24 @@ public class APIUtil {
 
     //TODO get token from the ui web app
     public static String getAuthToken(String username, String password) {
-        String response = "";
         Map<String, String> credMap = new HashedMap();
         credMap.put("username", username);
         credMap.put("password", password);
         String url  = TransportUtil.getURI(Constants.TOKEN_EP, credMap);
         MonnitResponse responseObj = getResponse(url);
-        return response;
+        return (String) responseObj.getResult();
     }
 
-    public static String getSensorsList(String token, String name, String applicationId) {
+    public static String getGatewayList(String token, String name) {
         String response = "";
         Map<String, String> paramMap = new HashedMap();
         paramMap.put("name", name);
-        paramMap.put("applicationID", applicationId);
-        String url  = TransportUtil.getURI(Constants.SENSOR_LIST, token, paramMap);
+        String url  = TransportUtil.getURI(Constants.GATEWAY_LIST, token, paramMap);
         MonnitResponse responseObj = getResponse(url);
         return response;
     }
 
-    public static boolean registerDevice(String token, String networkId, String sensorId, String checkDigit) {
-        Map<String, String> paramMap = new HashedMap();
-        paramMap.put(Constants.NETWORK_ID, networkId);
-        paramMap.put(Constants.SENSOR_ID, sensorId);
-        paramMap.put(Constants.CHECK_DIGIT, checkDigit);
-        String url = TransportUtil.getURI(Constants.REG_SENSOR_EP, token, paramMap);
-        MonnitResponse responseObj = getResponse(url);
-
-        if(responseObj != null && responseObj.getResult().equals("Success")) {
-            DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
-            deviceIdentifier.setId(sensorId);
-            deviceIdentifier.setType(Constants.DEVICE_TYPE);
-            try {
-                if (APIUtil.getDeviceManagementService().isEnrolled(deviceIdentifier)) {
-                    return false;
-                }
-                Device device = new Device();
-                device.setDeviceIdentifier(deviceIdentifier.getId());
-                EnrolmentInfo enrolmentInfo = new EnrolmentInfo();
-                enrolmentInfo.setDateOfEnrolment(new Date().getTime());
-                enrolmentInfo.setDateOfLastUpdate(new Date().getTime());
-                enrolmentInfo.setStatus(EnrolmentInfo.Status.ACTIVE);
-                enrolmentInfo.setOwnership(EnrolmentInfo.OwnerShip.BYOD);
-                device.setName(checkDigit);
-                device.setType(Constants.DEVICE_TYPE);
-                enrolmentInfo.setOwner(APIUtil.getAuthenticatedUser());
-                device.setEnrolmentInfo(enrolmentInfo);
-                Device.Property checkDigitProperty = new Device.Property();
-                checkDigitProperty.setName(Constants.CHECK_DIGIT);
-                checkDigitProperty.setValue(checkDigit);
-
-                List<Device.Property> propertyList = new ArrayList<>();
-                propertyList.add(checkDigitProperty);
-                device.setProperties(propertyList);
-
-                return APIUtil.getDeviceManagementService().enrollDevice(device);
-            } catch (DeviceManagementException e) {
-                log.error("Exception occurred when registering device in IoT server", e);
-                return false;
-            }
-        } else {
-            log.error("Exception occurred when registering device in iMonnit cloud");
-            return false;
-        }
-    }
-
-    private static MonnitResponse generateResultObj(MonnitResponse resp) throws JAXBException {
-        ElementNSImpl payload = ((ElementNSImpl) resp.getResult());
-        if(payload.getFirstChild().getNodeName().equals("APISensorList")) {
-            JAXBContext payloadContext = JAXBContext.newInstance(Result.class);
-            Result list = (Result)payloadContext.createUnmarshaller().unmarshal(payload);
-            List<ApiSensor> apiSensors = list.getApiSensors();
-            for (ApiSensor sensor: apiSensors) {
-                log.info(sensor.getSensorName());
-            }
-        }
-        return null;
-    }
-
-    private static MonnitResponse getResponse(String url) {
+    public static MonnitResponse getResponse(String url) {
         HttpURLConnection httpsConnection;
         MonnitResponse responseObj = null;
         String response = "";
@@ -170,6 +100,13 @@ public class APIUtil {
             log.error("Error occurred while parsing xml response.", e);
         }
         return  responseObj;
+    }
+
+    public static void updateDeviceLocation(DeviceLocation deviceLocation) throws DeviceDetailsMgtException {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        DeviceInformationManager informationManager =
+                (DeviceInformationManager) ctx.getOSGiService(DeviceInformationManager.class, null);
+        informationManager.addDeviceLocation(deviceLocation);
     }
 
 }
