@@ -209,11 +209,38 @@ public interface MonnitService {
     )
     Response createWebHook(@QueryParam("token") String token, @QueryParam("baseUrl") String baseUrl);
 
+
     @GET
     @Path("/monnit/recent-notifications")
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get recent notifications for iMonnit sensor",
+            notes = "",
+            response = Response.class,
+            tags = "monnit",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:monnit:enroll")
+                    })
+            }
+    )
     Response getRecentNotifications(@QueryParam("minutes") String minutes, @QueryParam("lastNotificationID") String lastNotificationId, @QueryParam("sensorID") String sensorId);
 
     @GET
     @Path("/monnit/notifications")
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get notifications for iMonnit sensor",
+            notes = "",
+            response = Response.class,
+            tags = "monnit",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:monnit:enroll")
+                    })
+            }
+    )
     Response getNotifications(@QueryParam("from") String from, @QueryParam("to") String to, @QueryParam("sensorID") String sensorID);
 }
