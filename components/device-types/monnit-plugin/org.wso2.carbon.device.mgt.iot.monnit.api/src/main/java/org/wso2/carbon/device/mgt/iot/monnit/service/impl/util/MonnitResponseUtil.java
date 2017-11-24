@@ -16,14 +16,12 @@ public class MonnitResponseUtil<T> {
 
     public T generateResultObj(MonnitResponse resp) throws JAXBException {
         ElementNSImpl payload = ((ElementNSImpl) resp.getResult());
+        JAXBContext payloadContext = JAXBContext.newInstance(Result.class);
+        Result result = (Result)payloadContext.createUnmarshaller().unmarshal(payload);
         if(resp.getMethod().equals("SensorList")) {
-            JAXBContext payloadContext = JAXBContext.newInstance(Result.class);
-            Result list = (Result)payloadContext.createUnmarshaller().unmarshal(payload);
-            List<ApiSensor> apiSensors = list.getApiSensors();
-            for (ApiSensor sensor: apiSensors) {
-                log.info(sensor.getSensorName());
-            }
-            return (T) apiSensors;
+            return (T) result.getApiSensors();
+        } else if(resp.getMethod().equals("SensorGet")) {
+            return (T) result.getApiSensor();
         }
         return null;
     }

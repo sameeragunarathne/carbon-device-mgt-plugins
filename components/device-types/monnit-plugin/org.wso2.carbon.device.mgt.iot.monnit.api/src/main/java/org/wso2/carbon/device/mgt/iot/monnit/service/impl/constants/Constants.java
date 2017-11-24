@@ -8,6 +8,8 @@ public class Constants {
     public static final String SENSOR_GET_EP = HOST + "xml/SensorGet/";
     public static final String GATEWAY_LIST = HOST + "xml/GatewayList/";
     public static final String REG_GATEWAY_EP = HOST + "xml/AssignGateway/";
+    public static final String GATEWAY_GET_EP = HOST + "xml/GatewayGet/";
+    public static final String WEBHOOK_CREATE_EP = HOST + "xml/WebHookCreate/";
 
     public static final String HTTP_POST = "POST";
     public static final String HTTP_GET = "GET";
@@ -30,4 +32,19 @@ public class Constants {
     public static final String BATTERY_LEVEL = "BatteryLevel";
     public static final String SIGNAL_STRENGTH = "SignalStrength";
     public static final String ALERTS_ACTIVE = "AlertsActive";
+
+    public static final String GATEWAY_ID = "gatewayID";
+    public static final String GATEWAY_NAME = "Name";
+    public static final String GATEWAY_TYPE = "GatewayType";
+    public static final String HEART_BEAT = "Heartbeat";
+    public static final String IS_DIRTY = "IsDirty";
+    public static final String LAST_COM_DATE = "LastCommunicationDate";
+    public static final String LAST_INBOUND_IP = "LastInboundIPAddress";
+    public static final String MAC_ADDRESS = "MacAddress";
+    public static final String IS_UNLOCKED = "IsUnlocked";
+    public static final String CHK_DIGIT = "CheckDigit";
+    public static final String ACCOUNT_ID = "AccountID";
+
+    public static final String BASE_URL = "baseUrl";
+
 }

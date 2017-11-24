@@ -8,6 +8,7 @@ import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceDetailsMgtException;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceInformationManager;
 import org.wso2.carbon.device.mgt.core.service.DeviceManagementProviderService;
+import org.wso2.carbon.device.mgt.core.service.GroupManagementProviderService;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitResponse;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.constants.Constants;
 
@@ -46,6 +47,18 @@ public class APIUtil {
             throw new IllegalStateException(msg);
         }
         return deviceManagementProviderService;
+    }
+
+    public static GroupManagementProviderService getGroupManagementService() {
+        PrivilegedCarbonContext ctx = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        GroupManagementProviderService groupManagementProviderService =
+                (GroupManagementProviderService) ctx.getOSGiService(GroupManagementProviderService.class, null);
+        if(groupManagementProviderService == null) {
+            String msg = "Group Management service has not initialized.";
+            log.error(msg);
+            throw new IllegalStateException(msg);
+        }
+        return groupManagementProviderService;
     }
 
     //TODO get token from the ui web app

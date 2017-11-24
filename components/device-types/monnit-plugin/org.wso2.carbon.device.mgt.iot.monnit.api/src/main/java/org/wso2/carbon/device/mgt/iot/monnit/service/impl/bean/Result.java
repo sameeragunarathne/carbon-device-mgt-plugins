@@ -9,6 +9,9 @@ import java.util.List;
 @XmlRootElement(name = "Result")
 public class Result {
     private List<ApiSensor> apiSensors;
+    private ApiSensor apiSensor;
+    private List<ApiGateway> apiGateways;
+    private ApiGateway apiGateway;
 
     @XmlElementWrapper(name = "APISensorList")
     @XmlElement(name = "APISensor")
@@ -16,8 +19,35 @@ public class Result {
         return apiSensors;
     }
 
-
     public void setApiSensors(List<ApiSensor> apiSensors) {
         this.apiSensors = apiSensors;
+    }
+
+    public ApiSensor getApiSensor() {
+        return apiSensor;
+    }
+
+    @XmlElement(name = "APISensor")
+    public void setApiSensor(ApiSensor apiSensor) {
+        this.apiSensor = apiSensor;
+    }
+
+    @XmlElementWrapper(name = "APIGatewayList")
+    @XmlElement(name = "APIGateway")
+    public List<ApiGateway> getApiGateways() {
+        return apiGateways;
+    }
+
+    public void setApiGateways(List<ApiGateway> apiGateways) {
+        this.apiGateways = apiGateways;
+    }
+
+    @XmlElement(name = "APIGateway")
+    public ApiGateway getApiGateway() {
+        return apiGateway;
+    }
+
+    public void setApiGateway(ApiGateway apiGateway) {
+        this.apiGateway = apiGateway;
     }
 }

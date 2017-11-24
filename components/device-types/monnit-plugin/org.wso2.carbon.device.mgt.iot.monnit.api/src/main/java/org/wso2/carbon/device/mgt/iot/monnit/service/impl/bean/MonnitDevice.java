@@ -38,6 +38,12 @@ public class MonnitDevice implements Serializable {
     )
     private String type;
     @ApiModelProperty(
+            name = "name",
+            value = "name of the device",
+            required = true
+    )
+    private String name;
+    @ApiModelProperty(
             name = "location",
             value = "location of the sensor",
             required = true
@@ -82,6 +88,14 @@ public class MonnitDevice implements Serializable {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public DeviceLocation getLocation() {
