@@ -12,6 +12,7 @@ import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupAlreadyExistException;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupManagementException;
+import org.wso2.carbon.device.mgt.core.dao.EnrollmentDAO;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceDetailsMgtException;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiGateway;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiSensor;
@@ -437,8 +438,8 @@ public class MonnitServiceImpl implements MonnitService {
             device.setProperties(propertyList);
 
             boolean status = APIUtil.getDeviceManagementService().enrollDevice(device);
-            if (status) {
-                DeviceLocation location = monnitDevice.getLocation();
+            DeviceLocation location = monnitDevice.getLocation();
+            if (status && location != null) {
                 location.setDeviceIdentifier(deviceIdentifier);
                 APIUtil.updateDeviceLocation(location);
             }
@@ -493,7 +494,11 @@ public class MonnitServiceImpl implements MonnitService {
                     } else {
                         status = EnrolmentInfo.Status.INACTIVE;
                     }
-                    APIUtil.getDeviceManagementService().updateDeviceEnrolmentInfo(device, status);
+                    EnrolmentInfo info = device.getEnrolmentInfo();
+                    info.setStatus(status);
+                    device.setEnrolmentInfo(info);
+//                    APIUtil.getDeviceManagementService().updateDeviceEnrolmentInfo(device, status);
+                    APIUtil.getDeviceManagementService().updateDeviceInfo(deviceIdentifier, device);
                 }
             }
         } catch (DeviceManagementException e) {
@@ -555,7 +560,11 @@ public class MonnitServiceImpl implements MonnitService {
                     }
                     device.setProperties(propertyList);
                     EnrolmentInfo.Status status = EnrolmentInfo.Status.ACTIVE;
-                    APIUtil.getDeviceManagementService().updateDeviceEnrolmentInfo(device, status);
+                    EnrolmentInfo info = device.getEnrolmentInfo();
+                    info.setStatus(status);
+                    device.setEnrolmentInfo(info);
+//                    APIUtil.getDeviceManagementService().updateDeviceEnrolmentInfo(device, status);
+                    APIUtil.getDeviceManagementService().updateDeviceInfo(deviceIdentifier, device);
                 }
             }
         } catch (DeviceManagementException e) {

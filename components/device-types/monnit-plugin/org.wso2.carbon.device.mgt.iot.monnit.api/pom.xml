@@ -5,14 +5,14 @@
     <parent>
         <artifactId>monnit-plugin</artifactId>
         <groupId>org.wso2.carbon.devicemgt-plugins</groupId>
-        <version>4.0.55</version>
+        <version>4.0.100-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.wso2.carbon.device.mgt.iot.monnit.api</artifactId>
-    <version>4.0.55</version>
+    <version>4.0.100-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>WSO2 Carbon - IoT Server Monnit Service API</name>
     <description>WSO2 Carbon - Monnit Service API Implementation</description>

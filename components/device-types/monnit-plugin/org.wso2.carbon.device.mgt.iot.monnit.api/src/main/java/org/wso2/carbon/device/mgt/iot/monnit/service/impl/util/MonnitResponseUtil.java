@@ -22,6 +22,10 @@ public class MonnitResponseUtil<T> {
             return (T) result.getApiSensors();
         } else if(resp.getMethod().equals("SensorGet")) {
             return (T) result.getApiSensor();
+        } else if(resp.getMethod().equals("GatewayList")) {
+            return (T) result.getApiGateways();
+        } else if(resp.getMethod().equals("GatewayGet")) {
+            return (T) result.getApiGateway();
         }
         return null;
     }
