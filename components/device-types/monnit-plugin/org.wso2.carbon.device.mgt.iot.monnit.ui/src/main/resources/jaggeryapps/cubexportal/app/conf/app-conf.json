@@ -11,7 +11,7 @@
     "login": {
       "onSuccess": {
         "script": "/app/modules/login.js",
-        "page": "locationview.page.dashboard"
+        "page": "cdmf.page.devicelocations"
       },
       "onFail": {
         "script": "/app/modules/login.js",
@@ -23,7 +23,7 @@
         "page": "cdmf.page.sign-in"
       },
       "onFail": {
-        "page": "locationview.page.dashboard"
+        "page": "cdmf.page.devicelocations"
       }
     },
     "sso": {

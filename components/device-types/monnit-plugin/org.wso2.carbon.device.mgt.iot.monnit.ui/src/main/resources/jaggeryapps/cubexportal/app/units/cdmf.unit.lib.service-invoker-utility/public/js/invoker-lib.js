@@ -32,7 +32,7 @@ var invokerUtil = function () {
         console.log(requestURL);
         console.log(requestPayload);
 
-        var appContext = "/buildingmonitor";
+        var appContext = "/cubexportal";
 
         console.log(appContext);
         var contentTypeValue = "application/json";

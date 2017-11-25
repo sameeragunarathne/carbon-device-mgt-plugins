@@ -171,8 +171,8 @@
     "perm:ios:wipe-data",
     "perm:admin",
     "perm:devicetype:deployment",
-    "perm:sensor:add",
-    "perm:sensor:view"
+    "perm:monnit:enroll",
+    "perm:geo-service:analytics-view"
   ],
   "isOAuthEnabled": true,
   "backendRestEndpoints": {

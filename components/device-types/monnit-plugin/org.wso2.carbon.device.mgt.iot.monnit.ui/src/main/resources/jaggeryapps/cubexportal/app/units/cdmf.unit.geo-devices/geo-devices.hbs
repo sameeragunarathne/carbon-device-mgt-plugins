@@ -1,0 +1,141 @@
+{{!
+  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+
+  WSO2 Inc. licenses this file to you under the Apache License,
+  Version 2.0 (the "License"); you may not use this file except
+  in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+}}
+
+{{#zone "topCss"}}
+    {{css  "css/app.css" combine=false}}
+    {{css  "css/map.css" combine=false}}
+    {{css  "css/leaflet.css" combine=false}}
+    {{css  "css/L.Control.Locate.css" combine=false}}
+    {{css  "css/MarkerCluster.Default.css" combine=false}}
+    {{css  "css/leaflet_fullscreen/leaflet.fullscreen.css" combine=false}}
+    {{css  "css/leaflet/leaflet.draw.css" combine=false}}
+    {{css  "css/leaflet/leaflet-search.min.css" combine=false}}
+    {{css "css/leaflet.awesome-markers.css" combine=false}}
+{{/zone}}
+
+{{#zone "navbarActions"}}
+        <li>
+            <!--suppress HtmlUnknownTarget -->
+            <a href="#" class="cu-btn" onclick="loadEnrollDeviceForm()">
+            <span class="icon fw-stack">
+                <i class="fw fw-add fw-stack-1x"></i>
+                <i class="fw fw-circle-outline fw-stack-2x"></i>
+            </span>
+                Enroll Device
+            </a>
+        </li>
+{{/zone}}
+
+{{#zone "content"}}
+    <div class="row">
+        <div class="dataTablesTop" style="padding: 5px; padding-left: 15px;">
+            <div class="dataTables_filter"><label><input
+                    type="text" class="form-control" style="font-weight: normal" placeholder="Search Devices.." ></label></div>
+            <div class="dataTables_filter"><label style="font-weight: normal;padding: 10px;margin-left: 10px">Filter Devices </label></div>
+            <div class="dataTables_filter"><label><select class="form-control" style="font-weight: normal;"><option value="">All</option><option value="ACTIVE">ACTIVE</option><option value="UNREACHABLE">UNREACHABLE</option></select></label></div>
+            <div class="dataTables_toolbar">
+                <ul class="nav nav-pills navbar-right remove-margin collapse-nav-sub" role="tablist">
+                    <li>
+                        <button class="btn-sm btn-default"><i
+                                class="fw fw-grid"></i></button>
+                    </li>
+                    <li>
+                        <button class="btn-sm btn-default"><i
+                                class="fw fw-list"></i></button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div>
+            <div id="device-map-wrapper" class="map-wrapper col-xs-12 col-sm-12 col-md-12 col-lg-12" style="padding: 10px">
+                <div id="enroll-device-header" class="row" style="margin-left: 5px;display: none">
+                    <h3>Enroll Device</h3>
+                </div>
+                <!--<div class="sidebar-wrapper sidebar-wrapper-animation-fix toggled" id="right-sidebar"-->
+                     <!--data-side="right">-->
+                <!--</div>-->
+                <div id="device-map" style="height: 80vh;">
+                    <div id="map"></div>
+                </div>
+            </div>
+            <div id="device-form-div" class="map-wrapper col-xs-2 col-sm-2 col-md-2 col-lg-2" style="padding: 10px;display: none">
+                <div class="row" style="margin-left: 5px;padding-top: 55px">
+                </div>
+                <div id="device-form" style="height: 80vh;">
+                    <label class="wr-input-label">Device Name</label>
+                    <input type="text" class="form-control" style="font-weight: normal">
+                    <br>
+                    <label class="wr-input-label">Gateway ID</label>
+                    <!--<input type="text" class="form-control" style="font-weight: normal">-->
+                    <div class="wr-input-control">
+                        <select id="gateways" class="form-control select2">
+                            <option>gateway1</option>
+                            <option>gateway2</option>
+                            <option>gateway3</option>
+                            <option>gateway4</option>
+                            <option>gateway5</option>
+                            <option>gateway6</option>
+                        </select>
+                    </div>
+                    <label class="wr-input-label">Location</label>
+                    <input type="text" class="form-control" style="font-weight: normal">
+                    <br>
+                    <!--<br>-->
+                    <!--<label class="wr-input-label">Gateway Code</label>-->
+                    <!--<input type="text" class="form-control" style="font-weight: normal">-->
+                    <label class="wr-input-label">Sensor IDs</label>
+                    <!--<div class="row" style="clear: both">-->
+                        <!--<div class="col-xs-9 col-sm-9 col-md-9">-->
+                            <!--<select class="form-control" style="font-weight: normal;"></select>-->
+                        <!--</div>-->
+                        <!--<button type="button" class="wr-btn wr-btn-horizontal add_button"><i class="fa fa-plus"></i></button>-->
+                    <!--</div>-->
+                    <div class="wr-input-control">
+                        <select id="sensors" class="form-control select2" multiple="multiple">
+                            <option>sensor1</option>
+                            <option>sensor2</option>
+                            <option>sensor3</option>
+                            <option>sensor4</option>
+                            <option>sensor5</option>
+                            <option>sensor6</option>
+                        </select>
+                    </div>
+                    <br>
+                    <button class="wr-btn">Save Device</button>
+                    <button id="enroll-cancel-btn" class="wr-btn" onclick="hideEnrollDeviceForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{{/zone}}
+
+{{#zone "bottomJs" }}
+    {{js "js/leaflet/leaflet.js" }}
+    {{js "js/leaflet/leaflet.markercluster.js" }}
+    {{js "js/leaflet/L.Control.Locate.js" }}
+    {{js "js/leaflet/L.Control.Focus.js" }}
+    {{js "js/leaflet/leaflet.groupedlayercontrol.js" }}
+    {{js "js/leaflet/Leaflet.fullscreen.min.js" }}
+    {{js "js/leaflet/Marker.Rotate.js" }}
+    {{js "js/leaflet/leaflet.draw.js" }}
+    {{js "js/leaflet.awesome-markers.js"}}
+    {{js "js/typeahead.bundle.min.js" }}
+    {{js "js/leaflet/leaflet-search.min.js"}}
+    {{js "js/geo_remote.js" }}
+    {{js "js/app.js" }}
+{{/zone}}
