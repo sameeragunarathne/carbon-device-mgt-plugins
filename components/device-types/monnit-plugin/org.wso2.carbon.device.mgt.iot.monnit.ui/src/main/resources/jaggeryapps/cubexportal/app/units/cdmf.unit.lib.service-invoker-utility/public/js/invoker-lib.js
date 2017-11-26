@@ -27,11 +27,6 @@ var invokerUtil = function () {
         restAPIRequestDetails["requestURL"] = requestURL;
         restAPIRequestDetails["requestPayload"] = requestPayload;
 
-        //TODo : Remove this
-        console.log(requestMethod);
-        console.log(requestURL);
-        console.log(requestPayload);
-
         var appContext = "/cubexportal";
 
         console.log(appContext);

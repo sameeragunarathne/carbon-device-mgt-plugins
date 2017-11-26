@@ -3,12 +3,16 @@ package org.wso2.carbon.device.mgt.iot.monnit.service.impl.util;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xerces.dom.ElementNSImpl;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiSensor;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitResponse;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.Result;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.PropertyException;
+import java.io.StringWriter;
 import java.util.List;
 
 public class MonnitResponseUtil<T> {
@@ -28,5 +32,15 @@ public class MonnitResponseUtil<T> {
             return (T) result.getApiGateway();
         }
         return null;
+    }
+
+    public String marshalObjToStr(JAXBContext jc, Object object) throws JAXBException {
+        Marshaller marshaller = jc.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json");
+        marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
+        StringWriter sw = new StringWriter();
+        marshaller.marshal(object, sw);
+        return sw.toString();
     }
 }

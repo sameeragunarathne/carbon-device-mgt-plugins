@@ -19,6 +19,7 @@ import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiSensor;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitDevice;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitDeviceGroup;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitResponse;
+import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.Result;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.constants.Constants;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.util.APIUtil;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.util.MonnitResponseUtil;
@@ -32,6 +33,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -107,12 +109,14 @@ public class MonnitServiceImpl implements MonnitService {
         try {
             List<ApiSensor> apiSensors = (List<ApiSensor>) responseUtil.generateResultObj(responseObj);
             addSensorProperties(apiSensors);
+            JAXBContext jaxbContext = JAXBContext.newInstance(ApiSensor.class);
+            String response = responseUtil.marshalObjToStr(jaxbContext, apiSensors);
+            return Response.status(Response.Status.OK.getStatusCode()).entity(response).build();
         } catch (JAXBException e) {
             String msg = "Error occurred while unmarshalling document.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(msg).build();
         }
-        return Response.status(Response.Status.OK.getStatusCode()).entity(responseObj).build();
     }
 
     @Override
@@ -133,12 +137,14 @@ public class MonnitServiceImpl implements MonnitService {
         try {
             List<ApiGateway> apiGateways = (List<ApiGateway>) responseUtil.generateResultObj(responseObj);
             addGatewayProperties(apiGateways);
+            JAXBContext jaxbContext = JAXBContext.newInstance(ApiGateway.class);
+            String response = responseUtil.marshalObjToStr(jaxbContext, apiGateways);
+            return Response.status(Response.Status.OK.getStatusCode()).entity(response).build();
         } catch (JAXBException e) {
             String msg = "Error occurred while unmarshalling document.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(msg).build();
         }
-        return Response.status(Response.Status.OK.getStatusCode()).entity(responseObj).build();
     }
 
     @Override

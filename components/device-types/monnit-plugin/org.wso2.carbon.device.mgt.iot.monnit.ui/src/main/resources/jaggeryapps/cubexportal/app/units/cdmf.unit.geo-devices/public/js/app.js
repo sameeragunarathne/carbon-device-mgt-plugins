@@ -16,9 +16,11 @@
  * under the License.
  */
 
+var token;
 
 $(document).ready(function () {
     initialLoad(false);
+    getToken();
 });
 
 /**
@@ -100,6 +102,7 @@ function initializeMap() {
         prev = L.marker(e.latlng, {
             icon: selectedMarker
         }).addTo(map);
+        getLocationName(e.latlng);
         $.noty.closeAll();
     });
 
@@ -120,7 +123,7 @@ var showMarkesOnZoomEnd = function (zoomLevel) {
      if(map.getZoom()===zoomLevel){
          showMarkersOnChange();
      }
-}
+};
 var showMarkersOnChange=function(){
     var bounds = map.getBounds();
     var maxLat = bounds._northEast.lat;
@@ -239,7 +242,6 @@ var successCallBackDeviceDetails=function(device){
     var deviceStatus = deviceJsonObject.enrolmentInfo.status;
     var deviceOwner = deviceJsonObject.enrolmentInfo.owner;
     popupContent = devicePopupManagement(deviceName,deviceType,deviceIdentifier,deviceStatus,deviceOwner);
-
 };
 
 var loadEnrollDeviceForm = function () {
@@ -253,6 +255,8 @@ var loadEnrollDeviceForm = function () {
     $("#device-map-wrapper").addClass("col-lg-10");
     $("#device-map-wrapper").addClass("col-sm-10");
     $("#device-map-wrapper").addClass("col-xs-10");
+    getSensorList();
+    getGatewayList();
 };
 
 var hideEnrollDeviceForm = function () {
@@ -266,4 +270,82 @@ var hideEnrollDeviceForm = function () {
     $("#device-map-wrapper").addClass("col-lg-12");
     $("#device-map-wrapper").addClass("col-sm-12");
     $("#device-map-wrapper").addClass("col-xs-12");
+};
+
+var getLocationName = function (latlng) {
+    var lat = Math.round(latlng.lat * 100000) / 100000;
+    var lng = Math.round(latlng.lng * 100000) / 100000;
+    $("#device-location-input").attr('data-latitude',latlng.lat);
+    $("#device-location-input").attr('data-longitude',latlng.lng);
+    var url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+"&lon="+lng;
+    $.ajax({
+        url: url,
+        type : 'GET',
+        success : function (result) {
+            $("#device-location-input").val(result.display_name);
+        }, error : function () {
+            console.log("error occurred retrieving location name")
+        }
+    });
+};
+
+var getToken = function () {
+    var backEndUrl = '/monnit/1.0.0/monnit/auth-token';
+    invokerUtil.get(backEndUrl,function (result) {
+        token = result;
+    },function (error) {
+        console.log("error when calling backend api to retrieve geo clusters");
+        console.log(error);
+    });
+};
+
+var saveDevice = function () {
+    var backEndUrl = '/monnit/1.0.0/monnit/devices?gatewayID=' + $("#gateways").val() + '&deviceName=' + encodeURI($("#device-name").val());
+    var device = {
+        "sensorIds" : $("#sensors").val(),
+        "location" : {
+            "latitude" : $("#device-location-input").attr("data-latitude"),
+            "longitude" : $("#device-location-input").attr("data-longitude")
+        }
+    };
+    invokerUtil.post(backEndUrl, device, function (result) {
+        console.log(result);
+    },function (error) {
+        console.log("error when calling backend api to retrieve geo clusters");
+        console.log(error);
+    });
+};
+
+var getSensorList = function () {
+    var backEndUrl = '/monnit/1.0.0/monnit/sensors?token=' + token;
+    invokerUtil.get(backEndUrl,function (result) {
+        var obj = jQuery.parseJSON(result)
+        $.each(obj, function(key, value) {
+            $("#sensors").append( $("<option>")
+                .val(value.SensorID)
+                .html(value.SensorID + ' - ' +value.SensorName)
+            );
+        });
+
+    },function (error) {
+        console.log("error when calling backend api to retrieve geo clusters");
+        console.log(error);
+    });
+};
+
+var getGatewayList = function () {
+    var backEndUrl = '/monnit/1.0.0/monnit/gateways?token=' + token;
+    invokerUtil.get(backEndUrl,function (result) {
+        var obj = jQuery.parseJSON(result);
+        $.each(obj, function(key, value) {
+            $("#gateways").append( $("<option>")
+                .val(value.GatewayID)
+                .html(value.GatewayID + ' - ' +value.Name)
+            );
+        });
+
+    },function (error) {
+        console.log("error when calling backend api to retrieve geo clusters");
+        console.log(error);
+    });
 };

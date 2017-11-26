@@ -14,6 +14,8 @@ import org.wso2.carbon.device.mgt.iot.monnit.service.impl.constants.Constants;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 import java.io.BufferedReader;
 import java.io.IOException;

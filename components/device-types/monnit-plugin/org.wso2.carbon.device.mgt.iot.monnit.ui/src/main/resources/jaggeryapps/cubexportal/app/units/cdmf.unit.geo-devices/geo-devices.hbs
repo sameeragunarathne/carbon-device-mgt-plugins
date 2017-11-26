@@ -78,45 +78,24 @@
                 </div>
                 <div id="device-form" style="height: 80vh;">
                     <label class="wr-input-label">Device Name</label>
-                    <input type="text" class="form-control" style="font-weight: normal">
+                    <input id="device-name" type="text" class="form-control" style="font-weight: normal">
                     <br>
                     <label class="wr-input-label">Gateway ID</label>
                     <!--<input type="text" class="form-control" style="font-weight: normal">-->
                     <div class="wr-input-control">
                         <select id="gateways" class="form-control select2">
-                            <option>gateway1</option>
-                            <option>gateway2</option>
-                            <option>gateway3</option>
-                            <option>gateway4</option>
-                            <option>gateway5</option>
-                            <option>gateway6</option>
                         </select>
                     </div>
                     <label class="wr-input-label">Location</label>
-                    <input type="text" class="form-control" style="font-weight: normal">
+                    <input id="device-location-input" type="text" class="form-control" style="font-weight: normal" data-latitude="" data-longitude="">
                     <br>
-                    <!--<br>-->
-                    <!--<label class="wr-input-label">Gateway Code</label>-->
-                    <!--<input type="text" class="form-control" style="font-weight: normal">-->
                     <label class="wr-input-label">Sensor IDs</label>
-                    <!--<div class="row" style="clear: both">-->
-                        <!--<div class="col-xs-9 col-sm-9 col-md-9">-->
-                            <!--<select class="form-control" style="font-weight: normal;"></select>-->
-                        <!--</div>-->
-                        <!--<button type="button" class="wr-btn wr-btn-horizontal add_button"><i class="fa fa-plus"></i></button>-->
-                    <!--</div>-->
                     <div class="wr-input-control">
                         <select id="sensors" class="form-control select2" multiple="multiple">
-                            <option>sensor1</option>
-                            <option>sensor2</option>
-                            <option>sensor3</option>
-                            <option>sensor4</option>
-                            <option>sensor5</option>
-                            <option>sensor6</option>
                         </select>
                     </div>
                     <br>
-                    <button class="wr-btn">Save Device</button>
+                    <button id="save-device-btn" class="wr-btn" onclick="saveDevice()">Save Device</button>
                     <button id="enroll-cancel-btn" class="wr-btn" onclick="hideEnrollDeviceForm()">Cancel</button>
                 </div>
             </div>
