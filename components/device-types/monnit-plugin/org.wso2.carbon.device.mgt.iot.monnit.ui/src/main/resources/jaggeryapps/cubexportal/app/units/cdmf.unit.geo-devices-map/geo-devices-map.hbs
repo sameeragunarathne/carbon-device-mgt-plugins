@@ -1,0 +1,175 @@
+{{!
+  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+
+  WSO2 Inc. licenses this file to you under the Apache License,
+  Version 2.0 (the "License"); you may not use this file except
+  in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+}}
+
+{{#zone "topCss"}}
+    {{css  "css/app.css" combine=false}}
+    {{css  "css/map.css" combine=false}}
+    {{css  "css/leaflet.css" combine=false}}
+    {{css  "css/L.Control.Locate.css" combine=false}}
+    {{css  "css/MarkerCluster.Default.css" combine=false}}
+    {{css  "css/leaflet_fullscreen/leaflet.fullscreen.css" combine=false}}
+    {{css  "css/leaflet/leaflet.draw.css" combine=false}}
+    {{css "css/leaflet.awesome-markers.css" combine=false}}
+{{/zone}}
+
+{{#zone "content"}}
+
+    <div class="row no-gutter" style="border: 1px solid #e4e4e4;">
+        <!--<div class="col-lg-12 wr-secondary-bar">-->
+            <!--<label id="policy-heading" class="device-id device-select">Device Name</label>-->
+            <h2>Myrtle St Device</h2>
+        <!--</div>-->
+    </div>
+    <div class="row no-gutter add-padding-5x" style="border: 1px solid #e4e4e4;">
+        <div class="media">
+            <div class="media-left media-middle col-xs-6 col-sm-6 col-md-2 col-lg-6">
+                <div style="background: #e4e4e4; color: #333333; padding: 10px; margin-bottom: 5px"><i class="fa fa-map-marker fa-1"></i>&nbsp;Device Location
+                </div>
+                <div class="map-wrapper">
+                    <div id="" style="height: 40vh;">
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="media-body asset-desc add-padding-left-5x">
+                <div style="background: #e4e4e4; color: #333333; padding: 10px; margin-bottom: 5px"><i class="fa fa-desktop fa-1"></i>&nbsp;Device Info
+                </div>
+                <table class="table table-responsive" id="members">
+                    <tbody>
+                    <tr role="row">
+                        <td class="sorting_1" style="padding:10px 15px;">Status</td>
+                        <td style="padding:10px 15px;">Active</td>
+                    </tr>
+                    <tr role="row">
+                        <td class="sorting_1" style="padding:10px 15px;">Last Communicated</td>
+                        <td style="padding:10px 15px;">17/12/2017 05:40 PM</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row no-gutter" style="border: 1px solid #e4e4e4;">
+        <div class="media">
+            <div class="media-left media-middle col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <table class="table table-responsive borderless table-hover" id="" style="background: #ffffff">
+                    <thead>
+                        <th class="sorting_1" style="padding:10px 15px;">Sensor Type</th>
+                        <th class="sorting_1" style="padding:10px 15px;">Name</th>
+                        <th class="sorting_1" style="padding:10px 15px;">Data</th>
+                        <th class="sorting_1" style="padding:10px 15px;">Last Check In</th>
+                        <th class="sorting_1" style="padding:10px 15px;">Signal Strength</th>
+                        <th class="sorting_1" style="padding:10px 15px;">Battery</th>
+                        <th class="sorting_1" style="padding:10px 15px;"></th>
+                    </thead>
+                    <tbody>
+                        <tr role="row">
+                            <td class="sorting_1" style="padding:10px 15px;border: none"><p><span class="fw fw-1x fw-hardware">&nbsp;HUMIDITY</span></p></td>
+                            <td style="padding:10px 15px;border: none">Active</td>
+                            <td class="sorting_1" style="padding:10px 15px;border: none">Status</td>
+                            <td style="padding:10px 15px;border: none">Active</td>
+                            <td class="sorting_1" style="padding:10px 15px;border: none"><p><span class="fw fw-wifi fw-1x" style="color:green">&nbsp;100%</span></p></td>
+                            <td style="padding:10px 15px;border: none"><p><span class="fw fw-battery fw-1x" style="color:green">&nbsp;100%</span></p></td>
+                            <td class="sorting_1" style="padding:10px 15px;border: none"><p><span class="fw fw-sort-down fw-1x"></span></p></td>
+                        </tr>
+                        <tr role="row">
+                            <td class="sorting_1" style="padding:10px 15px;border: none"><p><span class="fw fw-1x fw-hardware">&nbsp;TEMPERATURE</span></p></td>
+                            <td style="padding:10px 15px;border: none">17/12/2017 05:40 PM</td>
+                            <td class="sorting_1" style="padding:10px 15px;border: none">Last Communicated</td>
+                            <td style="padding:10px 15px;border: none">17/12/2017 05:40 PM</td>
+                            <td class="sorting_1" style="padding:10px 15px;border: none"><p><span class="fw fw-wifi fw-1x" style="color: red">&nbsp;10%</span></p></td>
+                            <td style="padding:10px 15px;border: none"><p><span class="fw fw-battery fw-1x" style="color: red">&nbsp;10%</span></p></td>
+                            <td class="sorting_1" style="padding:10px 15px;border: none"><p><span class="fw fw-sort-up fw-1x"></span></p></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row no-gutter add-padding-5x " style="border: 1px solid #e4e4e4;">
+        <div class="media">
+            <ul class="nav nav-tabs" style="background: #ffffff">
+                <li class="active"><a data-toggle="tab" href="#history">History</a>
+                </li>
+                <li class=""><a data-toggle="tab" href="#notifications">Notifications</a></li>
+            </ul>
+            <div class="tab-content" style="background: #ffffff">
+                <div id="history" class="tab-pane fade in active">
+                    {{unit "cdmf.unit.lib.rickshaw-graph"}}
+                    <span id="arduino-details" data-devices="" data-devicename=""
+                          data-deviceid=""
+                          data-appcontext="{{@app.context}}"></span>
+                    <div id="arduino-div-chart">
+                        <div class="chartWrapper" id="chartWrapper">
+                            <div id="y_axis-temperature" class="custom_y_axis"></div>
+                            <div class="legend_container">
+                                <div id="smoother-temperature" title="Smoothing"></div>
+                                <div id="legend-temperature"></div>
+                            </div>
+                            <div id="chart-temperature" class="custom_rickshaw_graph"></div>
+                            <div id="x_axis-temperature" class="custom_x_axis"></div>
+                            <div id="slider-temperature" class="custom_slider"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="notifications" class="tab-pane fade in">
+                    <table class="table table-responsive borderless " id="" style="background: #ffffff">
+                        <tbody>
+                            <tr role="row">
+                                <td class="sorting_1" style="padding:10px 15px;border: none;width: 1%;">
+                                    <span class="wr-hidden-operations-icon fw-stack">
+                                         <i class="fw fw-warning fw-stack-2x" style="color: darkorange"></i>
+                                     </span>
+                                </td>
+                                <td style="padding:10px 15px;border: none">Active</td>
+                            </tr>
+                            <tr role="row">
+                                <td class="sorting_1" style="padding:10px 15px;border: none;width: 1%;">
+                                    <span class="wr-hidden-operations-icon fw-stack">
+                                         <i class="fw fw-success fw-stack-2x" style="color: limegreen"></i>
+                                     </span>
+                                </td>
+                                <td style="padding:10px 15px;border: none">Active</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    </div>
+{{/zone}}
+
+{{#zone "bottomJs" }}
+    {{js "js/leaflet/leaflet.js" }}
+    {{js "js/leaflet/leaflet.markercluster.js" }}
+    {{js "js/leaflet/L.Control.Locate.js" }}
+    {{js "js/leaflet/L.Control.Focus.js" }}
+    {{js "js/leaflet/leaflet.groupedlayercontrol.js" }}
+    {{js "js/leaflet/Leaflet.fullscreen.min.js" }}
+    {{js "js/leaflet/Marker.Rotate.js" }}
+    {{js "js/leaflet/leaflet.draw.js" }}
+    {{js "js/leaflet.awesome-markers.js"}}
+    {{js "js/typeahead.bundle.min.js" }}
+    {{js "js/geo_remote.js" }}
+    {{js "js/app.js" }}
+    {{js "js/arduino.js" }}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            initialLoad(false);
+        });
+    </script>
+{{/zone}}
