@@ -1,8 +1,12 @@
 package org.wso2.carbon.device.mgt.iot.monnit.service.impl;
 
+import com.google.gson.Gson;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.analytics.dataservice.commons.SortByField;
+import org.wso2.carbon.analytics.dataservice.commons.SortType;
+import org.wso2.carbon.analytics.datasource.commons.exception.AnalyticsException;
 import org.wso2.carbon.device.mgt.common.Device;
 import org.wso2.carbon.device.mgt.common.DeviceIdentifier;
 import org.wso2.carbon.device.mgt.common.DeviceManagementException;
@@ -12,15 +16,19 @@ import org.wso2.carbon.device.mgt.common.device.details.DeviceLocation;
 import org.wso2.carbon.device.mgt.common.group.mgt.DeviceGroup;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupAlreadyExistException;
 import org.wso2.carbon.device.mgt.common.group.mgt.GroupManagementException;
-import org.wso2.carbon.device.mgt.core.dao.EnrollmentDAO;
+import org.wso2.carbon.device.mgt.common.notification.mgt.Notification;
 import org.wso2.carbon.device.mgt.core.device.details.mgt.DeviceDetailsMgtException;
+import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.APISentNotification;
+import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.AnalyticsResponse;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiGateway;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.ApiSensor;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitDevice;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitDeviceGroup;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitResponse;
-import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.Result;
+import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.SensorMessage;
+import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.SensorPayload;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.constants.Constants;
+import org.wso2.carbon.device.mgt.iot.monnit.service.impl.dto.SensorRecord;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.util.APIUtil;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.util.MonnitResponseUtil;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.util.TransportUtil;
@@ -36,6 +44,7 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -61,8 +70,8 @@ public class MonnitServiceImpl implements MonnitService {
                 sensorDevice.setCheckDigit(sensor.getCheckDigit());
                 sensorDevice.setType("sensor");
                 registerDevice(sensorDevice);
+                addSensorProperties(sensor);
             }
-            addSensorProperties(apiSensors);
 
             url  = TransportUtil.getURI(Constants.GATEWAY_LIST, token, paramMap);
             responseObj = APIUtil.getResponse(url);
@@ -74,8 +83,8 @@ public class MonnitServiceImpl implements MonnitService {
                 gatewayDevice.setCheckDigit(gateway.getCheckDigit());
                 gatewayDevice.setType("gateway");
                 registerDevice(gatewayDevice);
+                addGatewayProperties(gateway);
             }
-            addGatewayProperties(apiGateways);
         } catch (JAXBException e) {
             String msg = "Error occurred while unmarshalling document.";
             log.error(msg, e);
@@ -108,7 +117,17 @@ public class MonnitServiceImpl implements MonnitService {
         MonnitResponseUtil responseUtil = new MonnitResponseUtil();
         try {
             List<ApiSensor> apiSensors = (List<ApiSensor>) responseUtil.generateResultObj(responseObj);
-            addSensorProperties(apiSensors);
+            for (ApiSensor sensor : apiSensors) {
+                MonnitDevice device = new MonnitDevice();
+                device.setSensorID(sensor.getSensorId());
+                device.setType("sensor");
+                device.setCheckDigit(sensor.getCheckDigit());
+                registerDevice(device);
+                addSensorProperties(sensor);
+                if(isAssigned(sensor.getSensorId())) {
+                    apiSensors.remove(sensor);
+                }
+            }
             JAXBContext jaxbContext = JAXBContext.newInstance(ApiSensor.class);
             String response = responseUtil.marshalObjToStr(jaxbContext, apiSensors);
             return Response.status(Response.Status.OK.getStatusCode()).entity(response).build();
@@ -136,7 +155,17 @@ public class MonnitServiceImpl implements MonnitService {
         MonnitResponseUtil responseUtil = new MonnitResponseUtil();
         try {
             List<ApiGateway> apiGateways = (List<ApiGateway>) responseUtil.generateResultObj(responseObj);
-            addGatewayProperties(apiGateways);
+            for (ApiGateway gateway : apiGateways) {
+                MonnitDevice device = new MonnitDevice();
+                device.setGatewayID(gateway.getGatewayId());
+                device.setType("gateway");
+                device.setGatewayID(gateway.getCheckDigit());
+                registerDevice(device);
+                addGatewayProperties(gateway);
+                if(isAssigned(gateway.getGatewayId())) {
+                    apiGateways.remove(gateway);
+                }
+            }
             JAXBContext jaxbContext = JAXBContext.newInstance(ApiGateway.class);
             String response = responseUtil.marshalObjToStr(jaxbContext, apiGateways);
             return Response.status(Response.Status.OK.getStatusCode()).entity(response).build();
@@ -168,10 +197,8 @@ public class MonnitServiceImpl implements MonnitService {
             MonnitResponseUtil responseUtil = new MonnitResponseUtil();
             try {
                 response = registerDevice(device);
-                List<ApiSensor> sensorList = new ArrayList<>();
                 ApiSensor sensor = (ApiSensor)responseUtil.generateResultObj(responseObj);
-                sensorList.add(sensor);
-                addSensorProperties(sensorList);
+                addSensorProperties(sensor);
             } catch (JAXBException e) {
                 String msg = "Exception occurred when parsing xml document.";
                 log.error(msg, e);
@@ -206,10 +233,8 @@ public class MonnitServiceImpl implements MonnitService {
             MonnitResponseUtil responseUtil = new MonnitResponseUtil();
             try {
                 response = registerDevice(device);
-                List<ApiGateway> gatewayList = new ArrayList<>();
                 ApiGateway gateway = (ApiGateway)responseUtil.generateResultObj(responseObj);
-                gatewayList.add(gateway);
-                addGatewayProperties(gatewayList);
+                addGatewayProperties(gateway);
             } catch (JAXBException e) {
                 String msg = "Exception occurred when parsing xml document.";
                 log.error(msg, e);
@@ -236,32 +261,33 @@ public class MonnitServiceImpl implements MonnitService {
     @Path("/monnit/devices")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addDeviceGroup(@QueryParam("gatewayID") int gatewayId, @QueryParam("deviceName") String deviceName, MonnitDeviceGroup grp) {
+    public Response addDeviceGroup(MonnitDeviceGroup grp) {
         DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
-        deviceIdentifier.setId(String.valueOf(gatewayId));
+        deviceIdentifier.setId(String.valueOf(grp.getGatewayID()));
         deviceIdentifier.setType(Constants.DEVICE_TYPE);
         boolean response = false;
         try {
             if(!APIUtil.getDeviceManagementService().isEnrolled(deviceIdentifier)) {
                 MonnitDevice gatewayDevice = new MonnitDevice();
-                gatewayDevice.setGatewayID(String.valueOf(gatewayId));
+                gatewayDevice.setGatewayID(String.valueOf(grp.getGatewayID()));
                 gatewayDevice.setType("gateway");
-                gatewayDevice.setName(deviceName);
+                gatewayDevice.setName(grp.getDeviceName());
                 boolean status = registerDevice(gatewayDevice);
                 if(!status) {
                     return Response.status(Response.Status.OK.getStatusCode()).entity(response).build();
                 }
             }
             DeviceGroup group = new DeviceGroup();
-            group.setName(deviceName);
+            group.setName(grp.getDeviceName());
             APIUtil.getGroupManagementService().createGroup(group, null, null);
             List<DeviceIdentifier> deviceList = new ArrayList<>();
             deviceList.add(deviceIdentifier);
             for (Integer id: grp.getSensorIds()) {
                 deviceList.add(new DeviceIdentifier(String.valueOf(id), Constants.DEVICE_TYPE));
             }
-            DeviceGroup curGroup = APIUtil.getGroupManagementService().getGroup(deviceName);
+            DeviceGroup curGroup = APIUtil.getGroupManagementService().getGroup(grp.getDeviceName());
             APIUtil.getGroupManagementService().addDevices(curGroup.getGroupId(), deviceList);
+            addSensorAssignedGateway(deviceList, String.valueOf(grp.getGatewayID()));
 
             DeviceLocation location = grp.getLocation();
             location.setDeviceIdentifier(deviceIdentifier);
@@ -295,10 +321,8 @@ public class MonnitServiceImpl implements MonnitService {
     @GET
     @Path("/monnit/devices")
     public Response getDeviceGroups(@QueryParam("gatewayID") int gatewayId, @QueryParam("deviceName") String deviceName) {
-        DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
-        deviceIdentifier.setId(String.valueOf(gatewayId));
-        deviceIdentifier.setType(Constants.DEVICE_TYPE);
         List<MonnitDeviceGroup> deviceGroups = new ArrayList<>();
+
         try {
             List<DeviceGroup> groups;
             if(deviceName.isEmpty()) {
@@ -308,18 +332,47 @@ public class MonnitServiceImpl implements MonnitService {
                 groups.add(APIUtil.getGroupManagementService().getGroup(deviceName));
             }
             for (DeviceGroup group : groups) {
-                List<Device> devices = APIUtil.getGroupManagementService().getDevices(group.getGroupId(), -1, -1);
+                List<Device> devices = APIUtil.getGroupManagementService().getDevices(group.getGroupId(), 0, 10000);
+                List<Device> grpDevices = new ArrayList<>();
+                for (Device device : devices) {
+                    DeviceIdentifier identifier = new DeviceIdentifier(device.getDeviceIdentifier(), Constants.DEVICE_TYPE);
+                    grpDevices.add(APIUtil.getDeviceManagementService().getDevice(identifier));
+                }
                 MonnitDeviceGroup deviceGrp = new MonnitDeviceGroup();
                 deviceGrp.setDeviceGroup(group);
-                deviceGrp.setDevices(devices);
+                deviceGrp.setDevices(grpDevices);
+                deviceGrp.setDeviceName(group.getName());
                 deviceGroups.add(deviceGrp);
             }
         } catch (GroupManagementException e) {
             String msg = "Exception occurred when retrieving devices.";
             log.error(msg, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Exception occurred when retrieving devices.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(msg).build();
         }
-        return Response.status(Response.Status.OK.getStatusCode()).entity(deviceGroups).build();
+        String responseJson = new Gson().toJson(deviceGroups);
+        return Response.status(Response.Status.OK.getStatusCode()).entity(responseJson).build();
+    }
+
+    @Override
+    @GET
+    @Path("/monnit/devices/group")
+    public Response getDeviceGroupName(@QueryParam("gatewayID") int gatewayId, @QueryParam("deviceName") String deviceName) {
+        DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
+        deviceIdentifier.setId(String.valueOf(gatewayId));
+        deviceIdentifier.setType(Constants.DEVICE_TYPE);
+        try {
+            List<DeviceGroup> list = APIUtil.getGroupManagementService().getGroups(deviceIdentifier);
+            String response = list.get(1).getName();
+            return Response.status(Response.Status.OK.getStatusCode()).entity(response).build();
+        } catch (GroupManagementException e) {
+            String msg = "Exception occurred when retrieving devices.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(msg).build();
+        }
     }
 
     @Override
@@ -336,16 +389,127 @@ public class MonnitServiceImpl implements MonnitService {
     @Override
     @GET
     @Path("/monnit/recent-notifications")
-    public Response getRecentNotifications(@QueryParam("minutes") String minutes, @QueryParam("lastNotificationID") String lastNotificationId,
+    public Response getRecentNotifications(@QueryParam("token") String token, @QueryParam("minutes") String minutes, @QueryParam("lastNotificationID") String lastNotificationId,
             @QueryParam("sensorID") String sensorId) {
-        return null;
+        Map<String, String> paramMap = new HashedMap();
+        paramMap.put(Constants.MINUTES, minutes);
+        if(lastNotificationId != null && !lastNotificationId.isEmpty()) {
+            paramMap.put(Constants.LAST_SENT_NOTIFICATION_ID, lastNotificationId);
+        }
+        if(sensorId != null && !sensorId.isEmpty()) {
+            paramMap.put(Constants.SENSOR_ID, sensorId);
+        }
+        String url = TransportUtil.getURI(Constants.NOTIFICATION_EP, token, paramMap);
+        MonnitResponse responseObj = APIUtil.getResponse(url);
+        if(responseObj == null) {
+            String msg = "no notifications";
+            return Response.status(Response.Status.OK.getStatusCode()).entity(msg).build();
+        }
+        MonnitResponseUtil responseUtil = new MonnitResponseUtil();
+        try {
+            List<APISentNotification> notifications = (List<APISentNotification>) responseUtil.generateResultObj(responseObj);
+            for (APISentNotification notification : notifications) {
+                DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
+                deviceIdentifier.setId(sensorId);
+                deviceIdentifier.setType(Constants.DEVICE_TYPE);
+                Notification deviceNotification = new Notification();
+                deviceNotification.setDescription(notification.getText());
+                deviceNotification.setDeviceType(Constants.DEVICE_TYPE);
+                deviceNotification.setDeviceIdentifier(sensorId);
+                deviceNotification.setStatus(Notification.Status.NEW.toString());
+                //TODO map with device mgt operations
+//                APIUtil.getNotificationManagementService().addNotification(deviceIdentifier, deviceNotification);
+            }
+            String notificationStr = new Gson().toJson(notifications);
+            return Response.status(Response.Status.OK.getStatusCode()).entity(notificationStr).build();
+        } catch (JAXBException e) {
+            String msg = "Error occurred while unmarshalling document.";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(msg).build();
+        }
+//        catch (NotificationManagementException e) {
+//            String msg = "Error occurred while adding notification.";
+//            log.error(msg, e);
+//            return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(msg).build();
+//        }
     }
 
     @Override
     @GET
     @Path("/monnit/notifications")
-    public Response getNotifications(@QueryParam("from") String from, @QueryParam("to") String to, @QueryParam("sensorID") String sensorID) {
-        return null;
+    public Response getNotifications(@QueryParam("token") String token, @QueryParam("from") String from, @QueryParam("to") String to, @QueryParam("sensorID") String sensorID) {
+        DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
+        deviceIdentifier.setId(sensorID);
+        deviceIdentifier.setType(Constants.DEVICE_TYPE);
+        DeviceLocation location = new DeviceLocation();
+        location.setDeviceIdentifier(deviceIdentifier);
+        try {
+            APIUtil.getDeviceManagementService().getDevice(deviceIdentifier);
+            APIUtil.updateDeviceLocation(location);
+        } catch (DeviceDetailsMgtException e) {
+            String msg = "Exception occurred while updating location";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(msg).build();
+        } catch (DeviceManagementException e) {
+            String msg = "Exception occurred while disenrolling device";
+            log.error(msg, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(msg).build();
+        }
+        return Response.status(Response.Status.OK.getStatusCode()).build();
+    }
+
+    @Override
+    @Path("/monnit/sensor/stats")
+    @GET
+    public Response getSensorStats(@QueryParam("deviceId") String deviceId, @QueryParam("from") long from, @QueryParam("to") long to,
+            @QueryParam("applicationId") String applicationId, @QueryParam("gatewayId") String gatewayId) {
+        String query = "";
+        String fromDate = String.valueOf(from);
+        String toDate = String.valueOf(to);
+        if(applicationId != null && !applicationId.isEmpty()) {
+            query = "gatewayID:" + gatewayId +" AND applicationID:" + applicationId + " AND messageDate : [" + fromDate + " TO " + toDate + "]";
+        } else if(gatewayId != null && !gatewayId.isEmpty()) {
+            query = "gatewayID:" + gatewayId + " AND messageDate : [" + fromDate + " TO " + toDate + "]";
+        } else if(deviceId != null && !deviceId.isEmpty()) {
+            query = "sensorID:" + deviceId + " AND messageDate : [" + fromDate + " TO " + toDate + "]";
+        }
+        String sensorTableName = Constants.EVENT_TABLE;
+        try {
+            List<SortByField> sortByFields = new ArrayList<>();
+            SortByField sortByField = new SortByField("messageDate", SortType.ASC);
+            sortByFields.add(sortByField);
+            List<SensorRecord> sensorRecords = null;
+            sensorRecords = APIUtil.getAllEventsForSensorDevice(sensorTableName, query, sortByFields);
+//        String analyticsUrl = "https://192.168.57.77:9445/analytics/search";
+//        log.info(analyticsUrl);
+//            List<AnalyticsResponse> responseList = APIUtil.getAnalyticsData(analyticsUrl, sensorTableName, query, sortByFields);
+//            responseList.removeAll(Collections.singleton(null));
+            String records = new Gson().toJson(sensorRecords);
+            return Response.status(Response.Status.OK.getStatusCode()).entity(records).build();
+        }
+        catch (AnalyticsException e) {
+            String errorMsg = "Error on retrieving stats on table " + sensorTableName + " with query " + query;
+            log.error(errorMsg);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(errorMsg).build();
+        }
+    }
+
+    @Override
+    @Path("/monnit/sensor/stats")
+    @POST
+    @Consumes("application/json")
+    @Produces("application/json")
+    public Response publishSensorData(SensorPayload payload) {
+        if(payload != null) {
+            String url = "http://localhost:9765/endpoints/Floor-Analysis-Http-Receiver";
+            for (SensorMessage msg : payload.getSensorMessages()) {
+                int status = APIUtil.sendAnalyticsData(url, new Gson().toJson(msg));
+                if(status == -1) {
+                    log.error("Exception occurred when publishing analytics data to IoT server.");
+                }
+            }
+        }
+        return Response.status(Response.Status.OK.getStatusCode()).build();
     }
 
     private boolean registerDevice(MonnitDevice monnitDevice) {
@@ -380,6 +544,9 @@ public class MonnitServiceImpl implements MonnitService {
             Device.Property checkDigitProperty = new Device.Property();
             checkDigitProperty.setName(Constants.CHECK_DIGIT);
             checkDigitProperty.setValue(monnitDevice.getCheckDigit());
+            Device.Property gateway = new Device.Property();
+            gateway.setName(Constants.IS_ASSIGNED);
+            propertyList.add(gateway);
 
             if (monnitDevice.getType().equals("sensor")) {
                 Device.Property sensorName = new Device.Property();
@@ -459,52 +626,69 @@ public class MonnitServiceImpl implements MonnitService {
         }
     }
 
-    private void addSensorProperties(List<ApiSensor> apiSensors) {
+    private void addSensorProperties(ApiSensor sensor) {
         try {
-            for (ApiSensor sensor : apiSensors) {
-                DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
-                deviceIdentifier.setId(sensor.getSensorId());
-                deviceIdentifier.setType(Constants.DEVICE_TYPE);
-                if (APIUtil.getDeviceManagementService().isEnrolled(deviceIdentifier)) {
-                    Device device = APIUtil.getDeviceManagementService().getDevice(deviceIdentifier);
-                    List<Device.Property> propertyList = device.getProperties();
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
+            deviceIdentifier.setId(sensor.getSensorId());
+            deviceIdentifier.setType(Constants.DEVICE_TYPE);
+            if (APIUtil.getDeviceManagementService().isEnrolled(deviceIdentifier)) {
+                Device device = APIUtil.getDeviceManagementService().getDevice(deviceIdentifier);
+                List<Device.Property> propertyList = device.getProperties();
+                for (Device.Property prop : propertyList) {
+                    switch (prop.getName()) {
+                    case Constants.SENSOR_NAME:
+                        prop.setValue(sensor.getSensorName());
+                        break;
+                    case Constants.APPLICATION_ID:
+                        prop.setValue(sensor.getApplicationId());
+                        break;
+                    case Constants.CURRENT_READING:
+                        prop.setValue(sensor.getCurrentReading());
+                        break;
+                    case Constants.CS_NET_ID:
+                        prop.setValue(sensor.getCsNetId());
+                        break;
+                    case Constants.BATTERY_LEVEL:
+                        prop.setValue(sensor.getBatteryLevel());
+                        break;
+                    case Constants.SIGNAL_STRENGTH:
+                        prop.setValue(sensor.getSignalStrength());
+                        break;
+                    case Constants.ALERTS_ACTIVE:
+                        prop.setValue(sensor.isAlertsActive());
+                        break;
+                    }
+                }
+                device.setProperties(propertyList);
+                EnrolmentInfo.Status status;
+                //                    DeviceInfo info = new DeviceInfo();
+                //                    info.setDeviceDetailsMap();
+                if (sensor.getStatus().equals("1")) {
+                    status = EnrolmentInfo.Status.ACTIVE;
+                } else {
+
+                    status = EnrolmentInfo.Status.INACTIVE;
+                }
+                EnrolmentInfo info = device.getEnrolmentInfo();
+                info.setStatus(status);
+                device.setEnrolmentInfo(info);
+                APIUtil.getDeviceManagementService().updateDeviceInfo(deviceIdentifier, device);
+            }
+        } catch (DeviceManagementException e) {
+            log.error("Exception occurred when retrieving device from IoT server.", e);
+        }
+    }
+
+    private void addSensorAssignedGateway(List<DeviceIdentifier> deviceIds, String gatewayId) {
+        try {
+            for (DeviceIdentifier id : deviceIds) {
+                if (APIUtil.getDeviceManagementService().isEnrolled(id)) {
+                    List<Device.Property> propertyList = APIUtil.getDeviceManagementService().getDevice(id).getProperties();
                     for (Device.Property prop : propertyList) {
-                        switch (prop.getName()) {
-                        case Constants.SENSOR_NAME:
-                            prop.setValue(sensor.getSensorName());
-                            break;
-                        case Constants.APPLICATION_ID:
-                            prop.setValue(sensor.getApplicationId());
-                            break;
-                        case Constants.CURRENT_READING:
-                            prop.setValue(sensor.getCurrentReading());
-                            break;
-                        case Constants.CS_NET_ID:
-                            prop.setValue(sensor.getCsNetId());
-                            break;
-                        case Constants.BATTERY_LEVEL:
-                            prop.setValue(sensor.getBatteryLevel());
-                            break;
-                        case Constants.SIGNAL_STRENGTH:
-                            prop.setValue(sensor.getSignalStrength());
-                            break;
-                        case Constants.ALERTS_ACTIVE:
-                            prop.setValue(sensor.isAlertsActive());
-                            break;
+                        if(prop.getName().equals(Constants.IS_ASSIGNED)) {
+                            prop.setValue(gatewayId);
                         }
                     }
-                    device.setProperties(propertyList);
-                    EnrolmentInfo.Status status;
-                    if (sensor.getStatus().equals("1")) {
-                        status = EnrolmentInfo.Status.ACTIVE;
-                    } else {
-                        status = EnrolmentInfo.Status.INACTIVE;
-                    }
-                    EnrolmentInfo info = device.getEnrolmentInfo();
-                    info.setStatus(status);
-                    device.setEnrolmentInfo(info);
-//                    APIUtil.getDeviceManagementService().updateDeviceEnrolmentInfo(device, status);
-                    APIUtil.getDeviceManagementService().updateDeviceInfo(deviceIdentifier, device);
                 }
             }
         } catch (DeviceManagementException e) {
@@ -512,70 +696,82 @@ public class MonnitServiceImpl implements MonnitService {
         }
     }
 
-    private void addGatewayProperties(List<ApiGateway> apiGateways) {
+    private void addGatewayProperties(ApiGateway gateway) {
         try {
-            for (ApiGateway gateway : apiGateways) {
-                DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
-                deviceIdentifier.setId(gateway.getGatewayId());
-                deviceIdentifier.setType(Constants.DEVICE_TYPE);
-                if (APIUtil.getDeviceManagementService().isEnrolled(deviceIdentifier)) {
-                    Device device = APIUtil.getDeviceManagementService().getDevice(deviceIdentifier);
-                    List<Device.Property> propertyList = device.getProperties();
-                    for (Device.Property prop : propertyList) {
-                        switch (prop.getName()) {
-                        case Constants.GATEWAY_NAME:
-                            prop.setValue(gateway.getName());
-                            break;
-                        case Constants.NETWORK_ID:
-                            prop.setValue(gateway.getNetworkId());
-                            break;
-                        case Constants.GATEWAY_TYPE:
-                            prop.setValue(gateway.getGatewayType());
-                            break;
-                        case Constants.HEART_BEAT:
-                            prop.setValue(gateway.getHeartBeat());
-                            break;
-                        case Constants.IS_DIRTY:
-                            prop.setValue(gateway.getIsDirty());
-                            break;
-                        case Constants.LAST_COM_DATE:
-                            prop.setValue(gateway.getLastCommunicationDate());
-                            break;
-                        case Constants.LAST_INBOUND_IP:
-                            prop.setValue(gateway.getLastInboundIp());
-                            break;
-                        case Constants.MAC_ADDRESS:
-                            prop.setValue(gateway.getMac());
-                            break;
-                        case Constants.IS_UNLOCKED:
-                            prop.setValue(gateway.getIsUnlocked());
-                            break;
-                        case Constants.CHECK_DIGIT:
-                            prop.setValue(gateway.getCheckDigit());
-                            break;
-                        case Constants.ACCOUNT_ID:
-                            prop.setValue(gateway.getAccId());
-                            break;
-                        case Constants.SIGNAL_STRENGTH:
-                            prop.setValue(gateway.getSignalStrength());
-                            break;
-                        case Constants.BATTERY_LEVEL:
-                            prop.setValue(gateway.getBatteryLevel());
-                            break;
-                        }
+            DeviceIdentifier deviceIdentifier = new DeviceIdentifier();
+            deviceIdentifier.setId(gateway.getGatewayId());
+            deviceIdentifier.setType(Constants.DEVICE_TYPE);
+            if (APIUtil.getDeviceManagementService().isEnrolled(deviceIdentifier)) {
+                Device device = APIUtil.getDeviceManagementService().getDevice(deviceIdentifier);
+                List<Device.Property> propertyList = device.getProperties();
+                for (Device.Property prop : propertyList) {
+                    switch (prop.getName()) {
+                    case Constants.GATEWAY_NAME:
+                        prop.setValue(gateway.getName());
+                        break;
+                    case Constants.NETWORK_ID:
+                        prop.setValue(gateway.getNetworkId());
+                        break;
+                    case Constants.GATEWAY_TYPE:
+                        prop.setValue(gateway.getGatewayType());
+                        break;
+                    case Constants.HEART_BEAT:
+                        prop.setValue(gateway.getHeartBeat());
+                        break;
+                    case Constants.IS_DIRTY:
+                        prop.setValue(gateway.getIsDirty());
+                        break;
+                    case Constants.LAST_COM_DATE:
+                        prop.setValue(gateway.getLastCommunicationDate());
+                        break;
+                    case Constants.LAST_INBOUND_IP:
+                        prop.setValue(gateway.getLastInboundIp());
+                        break;
+                    case Constants.MAC_ADDRESS:
+                        prop.setValue(gateway.getMac());
+                        break;
+                    case Constants.IS_UNLOCKED:
+                        prop.setValue(gateway.getIsUnlocked());
+                        break;
+                    case Constants.CHECK_DIGIT:
+                        prop.setValue(gateway.getCheckDigit());
+                        break;
+                    case Constants.ACCOUNT_ID:
+                        prop.setValue(gateway.getAccId());
+                        break;
+                    case Constants.SIGNAL_STRENGTH:
+                        prop.setValue(gateway.getSignalStrength());
+                        break;
+                    case Constants.BATTERY_LEVEL:
+                        prop.setValue(gateway.getBatteryLevel());
+                        break;
                     }
-                    device.setProperties(propertyList);
-                    EnrolmentInfo.Status status = EnrolmentInfo.Status.ACTIVE;
-                    EnrolmentInfo info = device.getEnrolmentInfo();
-                    info.setStatus(status);
-                    device.setEnrolmentInfo(info);
-//                    APIUtil.getDeviceManagementService().updateDeviceEnrolmentInfo(device, status);
-                    APIUtil.getDeviceManagementService().updateDeviceInfo(deviceIdentifier, device);
+                }
+                device.setProperties(propertyList);
+                EnrolmentInfo.Status status = EnrolmentInfo.Status.ACTIVE;
+                EnrolmentInfo info = device.getEnrolmentInfo();
+                info.setStatus(status);
+                device.setEnrolmentInfo(info);
+                APIUtil.getDeviceManagementService().updateDeviceInfo(deviceIdentifier, device);
+            }
+        } catch (DeviceManagementException e) {
+            log.error("Exception occurred when retrieving device from IoT server.", e);
+        }
+    }
+
+    private boolean isAssigned(String id) {
+        DeviceIdentifier identifier = new DeviceIdentifier(id ,Constants.DEVICE_TYPE);
+        try {
+            Device device = APIUtil.getDeviceManagementService().getDevice(identifier);
+            for (Device.Property prop : device.getProperties()) {
+                if(prop.getName().equals(Constants.IS_ASSIGNED) && prop.getValue() != null) {
+                    return true;
                 }
             }
         } catch (DeviceManagementException e) {
             log.error("Exception occurred when retrieving device from IoT server.", e);
         }
+        return false;
     }
 
 }

@@ -32,7 +32,7 @@
         <li>
             <!--suppress HtmlUnknownTarget -->
             <a href="#" class="cu-btn" onclick="loadEnrollDeviceForm()">
-            <span class="icon fw-stack">
+            <span id="nav-bar-span" class="icon fw-stack" data-logged-in="{{isLogged}}" data-token="{{token}}">
                 <i class="fw fw-add fw-stack-1x"></i>
                 <i class="fw fw-circle-outline fw-stack-2x"></i>
             </span>
@@ -45,9 +45,12 @@
     <div class="row">
         <div class="dataTablesTop" style="padding: 5px; padding-left: 15px;">
             <div class="dataTables_filter"><label><input
-                    type="text" class="form-control" style="font-weight: normal" placeholder="Search Devices.." ></label></div>
+                    type="text" class="form-control" style="font-weight: normal" placeholder="Search Devices.." name="search-input" id="search-input" list="searchresults"></label></div>
             <div class="dataTables_filter"><label style="font-weight: normal;padding: 10px;margin-left: 10px">Filter Devices </label></div>
             <div class="dataTables_filter"><label><select class="form-control" style="font-weight: normal;"><option value="">All</option><option value="ACTIVE">ACTIVE</option><option value="UNREACHABLE">UNREACHABLE</option></select></label></div>
+            <datalist id="searchresults"></datalist>
+            <template id="resultstemplate">
+            </template>
             <div class="dataTables_toolbar">
                 <ul class="nav nav-pills navbar-right remove-margin collapse-nav-sub" role="tablist">
                     <li>
@@ -101,6 +104,72 @@
             </div>
         </div>
     </div>
+
+    <div id="location-marker-card" class="card" style="display: none">
+        <div class="card-block" style="width: 400px">
+            <h4 style="display: inline">Mt Saint Device</h4>
+            <span style="display: inline;float: right;margin-right: 10px"><a href="#" class="card-link">Another link</a></span>
+        </div>
+        <div class="card-block" style="width: 400px">
+            <div class="row">
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 ">
+                    <div class="well well-sm">
+                        <h4>300mV</h4>
+                        <p>Voltage <span style=" float:right;color: limegreen"><i class="fa fa-check"></i> Active</span></p>
+                    </div>
+                </div>
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                    <div class="well well-sm">
+                        <h4>30C</h4>
+                        <p>Temperature <span style=" float:right;color: limegreen"><i class="fa fa-check"></i> Active</span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                    <div class="well well-sm">
+                        <h4>+2%</h4>
+                        <p>Humidity</p>
+                    </div>
+                </div>
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                    <div class="well well-sm">
+                        <h4>+2%</h4>
+                        <p>Humidity</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDevice" tabindex="-1" role="dialog" aria-labelledby="modalDevice">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content clearfix">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fw fw-cancel"></i></button>
+                    <h3 class="modal-title" id="deviceModalLabel">Device Successfully Added</h3>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDeviceErr" tabindex="-1" role="dialog" aria-labelledby="modalDevice">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content clearfix">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fw fw-cancel"></i></button>
+                    <h3 class="modal-title" id="deviceModalLabel">Failed to add device</h3>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {{/zone}}
 
 {{#zone "bottomJs" }}

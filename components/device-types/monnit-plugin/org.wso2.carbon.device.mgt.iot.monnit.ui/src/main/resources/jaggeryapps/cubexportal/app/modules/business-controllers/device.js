@@ -24,7 +24,7 @@ deviceModule = function () {
     var constants = require('/app/modules/constants.js');
     var devicemgtProps = require("/app/modules/conf-reader/main.js")["conf"];
     var serviceInvokers = require("/app/modules/oauth/token-protected-service-invokers.js")["invokers"];
-    var batchProvider = require("/app/modules/batch-provider-api.js")["batchProviders"];
+    // var batchProvider = require("/app/modules/batch-provider-api.js")["batchProviders"];
 
     var publicMethods = {};
     var privateMethods = {};
@@ -73,10 +73,10 @@ deviceModule = function () {
         var locationDataSet = [];
         switch (deviceType) {
             case 'android':
-                locationDataSet = batchProvider.getData(userName, deviceId, deviceType);
+                // locationDataSet = batchProvider.getData(userName, deviceId, deviceType);
                 break;
             case 'android_sense':
-                locationDataSet = batchProvider.getData(userName, deviceId, deviceType);
+                // locationDataSet = batchProvider.getData(userName, deviceId, deviceType);
                 break;
 
         }

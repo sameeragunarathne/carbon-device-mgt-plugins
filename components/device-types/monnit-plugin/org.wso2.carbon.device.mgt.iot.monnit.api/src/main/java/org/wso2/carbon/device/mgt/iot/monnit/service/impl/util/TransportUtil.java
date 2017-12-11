@@ -2,19 +2,21 @@ package org.wso2.carbon.device.mgt.iot.monnit.service.impl.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.device.mgt.iot.monnit.service.impl.constants.Constants;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Map;
 
 public class TransportUtil {
 
     private static final Log log = LogFactory.getLog(TransportUtil.class);
 
-//    public static HttpsURLConnection getHttpConnection(String urlString) throws
+//    public static HttpsURLConnection getConnection(String urlString) throws
 //            TransportHandlerException {
 //        URL connectionUrl;
 //        HttpsURLConnection httpsConnection;
@@ -34,14 +36,18 @@ public class TransportUtil {
 //        return httpsConnection;
 //    }
 
-    public static HttpURLConnection getHttpConnection(String urlString) throws
+    public static URLConnection getConnection(String urlString) throws
             TransportHandlerException {
         URL connectionUrl;
-        HttpURLConnection httpsConnection;
+        URLConnection connection;
 
         try {
             connectionUrl = new URL(urlString);
-            httpsConnection = (HttpURLConnection) connectionUrl.openConnection();
+            if("https".equals(Constants.SERVER_PROTOCOL)) {
+                connection = (HttpsURLConnection) connectionUrl.openConnection();
+            } else {
+                connection = (HttpURLConnection) connectionUrl.openConnection();
+            }
         } catch (MalformedURLException e) {
             String errorMsg = "Error occured whilst trying to form HTTP-URL from string: " + urlString;
             log.error(errorMsg);
@@ -51,7 +57,7 @@ public class TransportUtil {
             log.error(errorMsg);
             throw new TransportHandlerException(errorMsg, exception);
         }
-        return httpsConnection;
+        return connection;
     }
 
     public static String getURI(String url, Map<String, String> params) {
@@ -62,7 +68,7 @@ public class TransportUtil {
     }
 
     public static String getURI(String url, String token, Map<String, String> params) {
-        url += token + "/";
+        url += token + "/?";
         for (Map.Entry<String,String> entry: params.entrySet()) {
             url += entry.getKey() +"="+entry.getValue()+"&";
         }

@@ -30,6 +30,8 @@ public class MonnitResponseUtil<T> {
             return (T) result.getApiGateways();
         } else if(resp.getMethod().equals("GatewayGet")) {
             return (T) result.getApiGateway();
+        } else if(resp.getMethod().equals("RecentlySentNotifications")) {
+            return (T) result.getApiSentNotifications();
         }
         return null;
     }

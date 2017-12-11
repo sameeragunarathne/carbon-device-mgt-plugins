@@ -16,7 +16,6 @@
         <servlet-name>CXFServlet</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
-    <!--TODO enable -->
     <context-param>
         <param-name>doAuthentication</param-name>
         <param-value>true</param-value>
@@ -29,6 +28,11 @@
     <context-param>
         <param-name>managed-api-enabled</param-name>
         <param-value>true</param-value>
+    </context-param>
+    <context-param>
+        <param-name>nonSecuredEndPoints</param-name>
+        <param-value>/monnit/1.0.0/monnit/sensor/stats
+        </param-value>
     </context-param>
 
     <listener>

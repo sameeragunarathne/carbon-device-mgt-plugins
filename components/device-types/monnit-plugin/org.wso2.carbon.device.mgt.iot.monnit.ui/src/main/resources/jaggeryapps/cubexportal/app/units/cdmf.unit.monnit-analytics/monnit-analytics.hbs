@@ -1,0 +1,110 @@
+{{!
+  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+
+  WSO2 Inc. licenses this file to you under the Apache License,
+  Version 2.0 (the "License"); you may not use this file except
+  in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+}}
+<span id="details" data-devices="{{devices}}" data-devicename="{{device.name}}"
+      data-gatewayName="{{gatewayName}}"
+      data-appcontext="{{@app.context}}" 
+      data-gatewayId="{{gatewayId}}"  
+      data-backend-api-url="{{backend-api-url}}"
+      data-token="{{token}}"></span>
+<div id="chartDivSensorType1" style="display:none;padding-top:30px">
+    <div style="padding-bottom:10px"><span id="sensorType1Title"></span></div>
+    <div class="chartWrapper" style="padding-top:20px;background:#ffffff" id="chartWrapper">
+        <div id="sensorType1yAxis" class="custom_y_axis"></div>
+        <div class="legend_container">
+            <div id="smoother-sensorType1" title="Smoothing"></div>
+            <div id="sensorType1Legend"></div>
+        </div>
+        <div id="chartSensorType1" class="custom_rickshaw_graph" data-backend-api-url = {{backendApiUri}}></div>
+        <div id="sensorType1xAxis" class="custom_x_axis"></div>
+        <div id="sensorType1Slider" style="display:none" class="custom_slider"></div>
+    </div>
+</div>
+
+<div id="chartDivSensorType2" style="display:none;padding-top:30px">
+    <div style="padding-bottom:10px"><span id="sensorType2Title"></span></div>  
+    <div class="chartWrapper" style="padding-top:20px;background:#ffffff" id="chartWrapper">
+        <div id="sensorType2yAxis" class="custom_y_axis"></div>
+        <div class="legend_container">
+            <div id="smoother-sensorType2" title="Smoothing"></div>
+            <div id="sensorType2Legend"></div>
+        </div>
+        <div id="chartSensorType2" class="custom_rickshaw_graph"  data-backend-api-url = {{backendApiUri}} ></div>
+        <div id="sensorType2xAxis" class="custom_x_axis"></div>
+        <div id="sensorType2Slider" style="display:none" class="custom_slider"></div>
+    </div>
+</div>
+
+<div id="chartDivSensorType3" style="display:none;padding-top:30px">
+    <div style="padding-bottom:10px"><span id="sensorType3Title"></span></div>
+    <div class="chartWrapper" style="padding-top:20px;background:#ffffff" id="chartWrapper">
+        <div id="sensorType3yAxis" class="custom_y_axis"></div>
+        <div class="legend_container">
+            <div id="smoother-sensorType3" title="Smoothing"></div>
+            <div id="sensorType3Legend"></div>
+        </div>
+        <div id="chartSensorType3" class="custom_rickshaw_graph" data-backend-api-url = {{backendApiUri}}></div>
+        <div id="sensorType3xAxis" class="custom_x_axis"></div>
+        <div id="sensorType3Slider" style="display:none" class="custom_slider"></div>
+    </div>
+</div>
+
+<div id="chartDivSensorType4" style="padding-top:30px">
+    <div style="padding-bottom:10px"><span id="sensorType4Title"><strong>Sensor Connectivity</strong></span></div>
+    <div class="chartWrapper" style="padding-top:20px;background:#ffffff" id="chartWrapper">
+        <div id="sensorType4yAxis" class="custom_y_axis"></div>
+        <div class="legend_container">
+            <div id="smoother-sensorType4" title="Smoothing"></div>
+            <div id="sensorType4Legend"></div>
+        </div>
+        <div id="chartSensorType4" class="custom_rickshaw_graph" data-backend-api-url = {{backendApiUri}}></div>
+        <div id="sensorType4xAxis" class="custom_x_axis"></div>
+        <div id="sensorType4Slider" style="display:none" class="custom_slider"></div>
+    </div>
+</div>
+
+<div id="chartDivSensorType5" style="padding-top:30px">
+    <div style="padding-bottom:10px"><span id="sensorType5Title"><strong>Signal Strength</strong></span></div>
+    <div class="chartWrapper" style="padding-top:20px;background:#ffffff" id="chartWrapper">
+        <div id="sensorType5yAxis" class="custom_y_axis"></div>
+        <div class="legend_container">
+            <div id="smoother-sensorType5" title="Smoothing"></div>
+            <div id="sensorType5Legend"></div>
+        </div>
+        <div id="chartSensorType5" class="custom_rickshaw_graph" data-backend-api-url = {{backendApiUri}}></div>
+        <div id="sensorType5xAxis" class="custom_x_axis"></div>
+        <div id="sensorType5Slider" style="display:none" class="custom_slider"></div>
+    </div>
+</div>
+
+<div id="chartDivSensorType6" style="padding-top:30px">
+    <div style="padding-bottom:10px"><span id="sensorType6Title"><strong>Battery Status</strong></span></div>
+    <div class="chartWrapper" style="padding-top:20px;background:#ffffff" id="chartWrapper">
+        <div id="sensorType6yAxis" class="custom_y_axis"></div>
+        <div class="legend_container">
+            <div id="smoother-sensorType6" title="Smoothing"></div>
+            <div id="sensorType6Legend"></div>
+        </div>
+        <div id="chartSensorType6" class="custom_rickshaw_graph" data-backend-api-url = {{backendApiUri}}></div>
+        <div id="sensorType6xAxis" class="custom_x_axis"></div>
+        <div id="sensorType6Slider" style="display:none" class="custom_slider"></div>
+    </div>
+</div>
+
+{{#zone "bottomJs"}}
+    {{js "js/device-analytics.js"}}
+{{/zone}}

@@ -10,6 +10,7 @@ import org.wso2.carbon.apimgt.annotations.api.Scope;
 import org.wso2.carbon.apimgt.annotations.api.Scopes;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitDevice;
 import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.MonnitDeviceGroup;
+import org.wso2.carbon.device.mgt.iot.monnit.service.impl.bean.SensorPayload;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -173,7 +174,7 @@ public interface MonnitService {
                     })
             }
     )
-    Response addDeviceGroup(@QueryParam("gatewayID") int gatewayId, @QueryParam("deviceName") String deviceName, MonnitDeviceGroup grp);
+    Response addDeviceGroup(MonnitDeviceGroup grp);
 
     @GET
     @Path("/monnit/devices")
@@ -191,6 +192,23 @@ public interface MonnitService {
             }
     )
     Response getDeviceGroups(@QueryParam("gatewayID") int gatewayId, @QueryParam("deviceName") String deviceName);
+
+    @GET
+    @Path("/monnit/devices/group")
+    @ApiOperation(
+            consumes = MediaType.APPLICATION_JSON,
+            httpMethod = "GET",
+            value = "Get device group name",
+            notes = "",
+            response = Response.class,
+            tags = "monnit",
+            extensions = {
+                    @Extension(properties = {
+                            @ExtensionProperty(name = SCOPE, value = "perm:monnit:enroll")
+                    })
+            }
+    )
+    Response getDeviceGroupName(@QueryParam("gatewayID") int gatewayId, @QueryParam("deviceName") String deviceName);
 
     @GET
     @Path("/monnit/webhook/create")
@@ -225,7 +243,7 @@ public interface MonnitService {
                     })
             }
     )
-    Response getRecentNotifications(@QueryParam("minutes") String minutes, @QueryParam("lastNotificationID") String lastNotificationId, @QueryParam("sensorID") String sensorId);
+    Response getRecentNotifications(@QueryParam("token") String token, @QueryParam("minutes") String minutes, @QueryParam("lastNotificationID") String lastNotificationId, @QueryParam("sensorID") String sensorId);
 
     @GET
     @Path("/monnit/notifications")
@@ -242,5 +260,22 @@ public interface MonnitService {
                     })
             }
     )
-    Response getNotifications(@QueryParam("from") String from, @QueryParam("to") String to, @QueryParam("sensorID") String sensorID);
+    Response getNotifications(@QueryParam("token") String token, @QueryParam("from") String from, @QueryParam("to") String to, @QueryParam("sensorID") String sensorID);
+
+    @Path("/monnit/sensor/stats/")
+    @GET
+    Response getSensorStats(@QueryParam("deviceId") String deviceId, @QueryParam("from") long from,
+            @QueryParam("to") long to, @QueryParam("applicationId") String applicationId, @QueryParam("gatewayId") String gatewayId);
+
+//    @Path("/monnit/sensor/stats")
+//    @GET
+//    Response getAllStats(@QueryParam("gatewayId") String gatewayId, @QueryParam("from") long from,
+//            @QueryParam("to") long to, @QueryParam("applicationId") String applicationId);
+
+    @Path("/monnit/sensor/stats")
+    @POST
+    @Consumes("application/json")
+    @Produces("application/json")
+    Response publishSensorData(SensorPayload payload);
+
 }

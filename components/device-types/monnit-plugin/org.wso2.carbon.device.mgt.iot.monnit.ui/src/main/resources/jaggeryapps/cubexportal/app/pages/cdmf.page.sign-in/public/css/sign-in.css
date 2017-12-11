@@ -1,5 +1,5 @@
 .login-bg{
-    background: url('images/bg-login.png') bottom left no-repeat fixed;
+    background: url('images/bg-login.png') left no-repeat fixed;
 }
 
 body.login-bg{

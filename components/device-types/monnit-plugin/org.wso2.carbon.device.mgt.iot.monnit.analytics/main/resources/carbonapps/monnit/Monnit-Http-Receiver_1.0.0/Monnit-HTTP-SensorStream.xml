@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~
+  ~ WSO2 Inc. licenses this file to you under the Apache License,
+  ~ Version 2.0 (the "License"); you may not use this file except
+  ~ in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied. See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<eventReceiver name="Monnit-Http-Receiver"
+               statistics="disable" trace="disable" xmlns="http://wso2.org/carbon/eventreceiver">
+    <from eventAdapterType="http">
+        <property name="basicAuthEnabled">true</property>
+        <property name="transports">all</property>
+    </from>
+    <mapping customMapping="enable" type="json">
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.gatewayID"/>-->
+            <!--<to name="gatewayID" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.gatewayName"/>-->
+            <!--<to name="gatewayName" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.accountID"/>-->
+            <!--<to name="accountID" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.networkID"/>-->
+            <!--<to name="networkID" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.messageType"/>-->
+            <!--<to name="messageType" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.power"/>-->
+            <!--<to name="power" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.batteryLevel"/>-->
+            <!--<to name="batteryLevel" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.date"/>-->
+            <!--<to name="date" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.count"/>-->
+            <!--<to name="count" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.signalStrength"/>-->
+            <!--<to name="signalStrength" type="string"/>-->
+        <!--</property>-->
+        <!--<property>-->
+            <!--<from jsonPath="$.gatewayMessage.pendingChange"/>-->
+            <!--<to name="pendingChange" type="string"/>-->
+        <!--</property>-->
+        <property>
+            <from jsonPath="$.sensorID"/>
+            <to name="sensorID" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.gatewayID"/>
+            <to name="gatewayID" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.sensorName"/>
+            <to name="sensorName" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.applicationID"/>
+            <to name="applicationID" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.networkID"/>
+            <to name="sensorNetworkID" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.dataMessageGUID"/>
+            <to name="dataMessageGUID" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.state"/>
+            <to name="state" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.messageDate"/>
+            <to name="messageDate" type="long"/>
+        </property>
+        <property>
+            <from jsonPath="$.rawData"/>
+            <to name="rawData" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.dataType"/>
+            <to name="dataType" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.dataValue"/>
+            <to name="dataValue" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.plotValues"/>
+            <to name="plotValues" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.plotLabels"/>
+            <to name="plotLabels" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.batteryLevel"/>
+            <to name="sensorBatteryLevel" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.signalStrength"/>
+            <to name="sensorSignalStrength" type="string"/>
+        </property>
+        <property>
+            <from jsonPath="$.pendingChange"/>
+            <to name="sensorPendingChange" type="string"/>
+        </property>
+    </mapping>
+    <to streamName="org.wso2.monnit.SensorStream" version="1.0.0"/>
+</eventReceiver>

@@ -38,7 +38,7 @@ $(document).ready(function () {
         },
         shortcuts: 'hide',
         endDate: currentDay,
-        maxDays: 2,
+        maxDays: 28,
         getValue: function () {
             return this.value;
         },
@@ -53,11 +53,25 @@ $(document).ready(function () {
                       $(this).siblings().removeClass('active');
                       fromDate = dateRange.date1 != "Invalid Date" ? dateRange.date1.getTime() / 1000 : null;
                       toDate = dateRange.date2 != "Invalid Date" ? dateRange.date2.getTime() / 1000 : null;
-                      drawGraph(fromDate, toDate);
+                      console.log(fromDate);
+                      console.log(toDate);
+                      drawGraph_monnit(fromDate, toDate);
+                      setDateLabel();
+                      //setDateTime(fromDate, toDate);
                   }
             );
     setDateTime(currentDay.getTime() - 3600000, currentDay.getTime());
     $('#hour-btn').addClass('active');
+    // $($(document).find(".date-picker-wrapper")).width('400px');
+});
+
+$('#date-range').on('click', function () {
+    setTimeout(function(){
+        var css = $(document).find(".date-picker-wrapper").css('left');
+        var offset = 100;
+        var transform = parseInt(css) - offset;
+        $(document).find(".date-picker-wrapper").css('left', transform);
+    }, 50);
 });
 
 //hour
@@ -115,4 +129,15 @@ function convertDate(date) {
     return date.getFullYear() + '-' + (('' + month).length < 2 ? '0' : '') + month + '-' +
            (('' + day).length < 2 ? '0' : '') + day + " " + (('' + hour).length < 2 ? '0' : '') +
            hour + ":" + (('' + minute).length < 2 ? '0' : '') + minute;
+}
+
+
+function setDateLabel() {
+    startDate = new Date(fromDate*1000);
+    endDate = new Date(toDate*1000);
+    DateRange = convertDate(startDate) + " to " + convertDate(endDate);
+    $('#date-range').html(DateRange);
+    var tzOffset = new Date().getTimezoneOffset() * 60 / 1000;
+    fromDate += tzOffset;
+    toDate += tzOffset;
 }

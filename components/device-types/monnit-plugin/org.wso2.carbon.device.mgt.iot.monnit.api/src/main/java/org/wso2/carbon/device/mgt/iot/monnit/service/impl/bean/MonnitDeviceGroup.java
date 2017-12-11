@@ -8,6 +8,8 @@ import java.io.Serializable;
 import java.util.List;
 
 public class MonnitDeviceGroup implements Serializable {
+    String deviceName;
+    int gatewayID;
     DeviceGroup deviceGroup;
     List<Device> devices;
     List<Integer> sensorIds;
@@ -43,5 +45,21 @@ public class MonnitDeviceGroup implements Serializable {
 
     public void setLocation(DeviceLocation location) {
         this.location = location;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
+    }
+
+    public int getGatewayID() {
+        return gatewayID;
+    }
+
+    public void setGatewayID(int gatewayID) {
+        this.gatewayID = gatewayID;
     }
 }

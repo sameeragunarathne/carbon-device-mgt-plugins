@@ -17,8 +17,9 @@
  */
 
 function onRequest(context) {
+    var log = new Log();
     var deviceTypes = context.unit.params.deviceTypes;
-    var deviceType = "senseme";
+    var deviceType = "monnit";
 
     var deviceTypesList = [];
     if (deviceTypes) {

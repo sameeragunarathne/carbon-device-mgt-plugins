@@ -12,6 +12,7 @@ public class Result {
     private ApiSensor apiSensor;
     private List<ApiGateway> apiGateways;
     private ApiGateway apiGateway;
+    private List<APISentNotification> apiSentNotifications;
 
     @XmlElementWrapper(name = "APISensorList")
     @XmlElement(name = "APISensor")
@@ -49,5 +50,15 @@ public class Result {
 
     public void setApiGateway(ApiGateway apiGateway) {
         this.apiGateway = apiGateway;
+    }
+
+    @XmlElementWrapper(name = "APISentNotificationList")
+    @XmlElement(name = "APISentNotification")
+    public List<APISentNotification> getApiSentNotifications() {
+        return apiSentNotifications;
+    }
+
+    public void setApiSentNotifications(List<APISentNotification> apiSentNotifications) {
+        this.apiSentNotifications = apiSentNotifications;
     }
 }

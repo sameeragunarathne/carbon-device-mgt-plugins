@@ -17,19 +17,24 @@
  */
 
 var palette = new Rickshaw.Color.Palette({scheme: "classic9"});
-
-function drawGraph_arduino(from, to) {
+var deviceID;
+var deviceName;
+function drawGraph_monnit(from, to, deviceId, devicename) {
+    if(deviceId && devicename) {
+        deviceID = deviceId;
+        deviceName = devicename;   
+    } 
     $("#y_axis-temperature").html("");
     $("#smoother-temperature").html("");
     $("#legend-temperature").html("");
     $("#chart-temperature").html("");
     $("#x_axis-temperature").html("");
-    $("#slider-temperature").html("");
+    // $("#slider-temperature").html("");
 
-    var devices = $("#arduino-details").data("devices");
+    var devices = $("#monnit-div-chart").data("devices");
     var tzOffset = new Date().getTimezoneOffset() * 60;
 
-    var chartWrapperElmId = "#arduino-div-chart";
+    var chartWrapperElmId = "#monnit-div-chart";
     var graphWidth = $(chartWrapperElmId).width() - 50;
     var graphConfig = {
         element: document.getElementById("chart-temperature"),
@@ -37,7 +42,7 @@ function drawGraph_arduino(from, to) {
         height: 400,
         strokeWidth: 2,
         renderer: 'line',
-        interpolation: "linear",
+        interpolation: "basis",
         unstack: true,
         stack: false,
         xScale: d3.time.scale(),
@@ -45,29 +50,15 @@ function drawGraph_arduino(from, to) {
         series: []
     };
 
-    if (devices) {
-        for (var i = 0; i < devices.length; i++) {
-            graphConfig['series'].push(
-                {
-                    'color': palette.color(),
-                    'data': [{
-                        x: parseInt(new Date().getTime() / 1000),
-                        y: 0
-                    }],
-                    'name': devices[i].name
-                });
-        }
-    } else {
-        graphConfig['series'].push(
-            {
-                'color': palette.color(),
-                'data': [{
-                    x: parseInt(new Date().getTime() / 1000),
-                    y: 0
-                }],
-                'name': $("#arduino-details").data("devicename")
-            });
-    }
+    graphConfig['series'].push(
+        {
+            'color': palette.color(),
+            'data': [{
+                x: parseInt(new Date().getTime() / 1000),
+                y: 0
+            }],
+            'name': deviceName
+        });
 
     var graph = new Rickshaw.Graph(graphConfig);
 
@@ -88,11 +79,6 @@ function drawGraph_arduino(from, to) {
     });
 
     yAxis.render();
-
-    var slider = new Rickshaw.Graph.RangeSlider.Preview({
-        graph: graph,
-        element: document.getElementById("slider-temperature")
-    });
 
     var legend = new Rickshaw.Graph.Legend({
         graph: graph,
@@ -125,56 +111,34 @@ function drawGraph_arduino(from, to) {
         legend: legend
     });
 
-    var deviceIndex = 0;
-
-    if (devices) {
-        getData();
-    } else {
-        var backendApiUrl = $("#arduino-div-chart").data("backend-api-url") + "?from=" + from + "&to=" + to;
-        var successCallback = function (data) {
-            if (data) {
-                drawLineGraph(JSON.parse(data));
-            }
-        };
-        invokerUtil.get(backendApiUrl, successCallback, function (message) {
-        });
-    }
+    getData();
 
     function getData() {
-        if (deviceIndex >= devices.length) {
-            return;
-        }
-        var backendApiUrl = $("#arduino-div-chart").data("backend-api-url") + devices[deviceIndex].deviceIdentifier
-            + "?from=" + from + "&to=" + to;
-        var successCallback = function (data) {
-            if (data) {
-                drawLineGraph(JSON.parse(data));
-            }
-            deviceIndex++;
-            getData();
-        };
-        invokerUtil.get(backendApiUrl, successCallback, function (message) {
-            deviceIndex++;
-            getData();
+        var backEndUrl = '/monnit/1.0.0/monnit/sensor/stats?deviceId=' + deviceID + '&from=' + from +'&to='+ to;
+        console.log(deviceID);
+        invokerUtil.get(backEndUrl,function (result) {
+            var data = jQuery.parseJSON(result);
+            console.log(data);
+            drawLineGraph(data);
+        },function (error) {
+            console.log("error when calling backend api to retrieve geo clusters");
+            console.log(error);
         });
     }
 
     function drawLineGraph(data) {
-        if (data.length === 0 || data.length === undefined) {
-            return;
-        }
-
         var chartData = [];
-        for (var i = 0; i < data.length; i++) {
-            chartData.push(
-                {
-                    x: parseInt(data[i].values.time) - tzOffset,
-                    y: parseInt(data[i].values.temperature)
-                }
-            );
+        if(data) {
+            for (var i = 0; i < data.length; i++) {
+                chartData.push(
+                    {
+                        x: parseInt(data[i].values.messageDate),
+                        y: parseInt(data[i].values.dataValue)
+                    }
+                );
+            }
         }
-
-        graphConfig.series[deviceIndex].data = chartData;
+        graphConfig.series[0].data = chartData;
         graph.update();
     }
 }

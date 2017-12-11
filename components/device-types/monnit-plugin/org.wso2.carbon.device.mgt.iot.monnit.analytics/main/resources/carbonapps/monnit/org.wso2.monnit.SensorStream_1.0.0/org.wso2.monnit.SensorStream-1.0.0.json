@@ -1,0 +1,117 @@
+{
+  "name": "org.wso2.monnit.SensorStream",
+  "version": "1.0.0",
+  "nickName": "Monnit",
+  "description": "Sensor data received from the monnit cloud",
+  "payloadData": [
+//    {
+//      "name" : "gatewayID",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "gatewayName",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "accountID",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "networkID",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "messageType",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "power",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "batteryLevel",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "date",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "count",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "signalStrength",
+//      "type" : "STRING"
+//    },
+//    {
+//      "name" : "pendingChange",
+//      "type" : "STRING"
+//    }
+//  ,
+    {
+      "name" : "sensorID",
+      "type" : "STRING"
+    },
+    {
+      "name":"gatewayID",
+      "type":"STRING"
+    },
+    {
+      "name" : "sensorName",
+      "type" : "STRING"
+    },
+    {
+      "name" : "applicationID",
+      "type" : "STRING"
+    },
+    {
+      "name" : "sensorNetworkID",
+      "type" : "STRING"
+    },
+    {
+      "name" : "dataMessageGUID",
+      "type" : "STRING"
+    },
+    {
+      "name" : "state",
+      "type" : "STRING"
+    },
+    {
+      "name" : "messageDate",
+      "type" : "LONG"
+    },
+    {
+      "name" : "rawData",
+      "type" : "STRING"
+    },
+    {
+      "name" : "dataType",
+      "type" : "STRING"
+    },
+    {
+      "name" : "dataValue",
+      "type" : "STRING"
+    },
+    {
+      "name" : "plotValues",
+      "type" : "STRING"
+    },
+    {
+      "name" : "plotLabels",
+      "type" : "STRING"
+    },
+    {
+      "name" : "sensorBatteryLevel",
+      "type" : "STRING"
+    },
+    {
+      "name" : "sensorSignalStrength",
+      "type" : "STRING"
+    },
+    {
+      "name" : "sensorPendingChange",
+      "type" : "STRING"
+    }
+  ]
+}

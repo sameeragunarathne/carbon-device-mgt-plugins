@@ -16,6 +16,14 @@
  * under the License.
  */
 
+var token; 
+
+$(document).ready(function () {
+    token = $('#data-holder').attr('data-token');
+    initialLoad(false);
+    getDeviceGrp();
+});
+
 /**
  * App.js
  */
@@ -56,7 +64,7 @@ function initializeMap() {
     } else {
     }
     map = L.map("map", {
-        zoom: 2,
+        zoom: 3,
         center: [0, 0],
         layers: [defaultOSM],
         zoomControl: true,
@@ -67,31 +75,54 @@ function initializeMap() {
     L.tileLayer(tileSet, {attribution: attribution}).addTo(map);
     markersLayer.addTo(map);
 
-    showMarkersOnChange();
+    // showMarkersOnChange();
 
     map.zoomControl.setPosition('bottomright');
+
+    var lat = $("#data-holder").attr("data-lat");
+    var lng = $("#data-holder").attr("data-lng");
+
+    var selectedMarker = L.AwesomeMarkers.icon({
+        icon: ' ',
+        markerColor: 'blue'
+    });
+
+    var pos = {};
+    pos.lat = lat;
+    pos.lng = lng;
+    L.marker(pos, {
+        icon: selectedMarker
+    }).addTo(map);
+
     map.on('click', function (e) {
         $.noty.closeAll();
     });
 
     map.on('zoomend', function () {
-        currentZoomLevel = map.getZoom();
-        setTimeout(showMarkesOnZoomEnd(currentZoomLevel),2000);
+        // currentZoomLevel = map.getZoom();
+        // setTimeout(showMarkesOnZoomEnd(currentZoomLevel),2000);
     });
 
     map.on('dragend',function(){
-        showMarkersOnChange();
+        // showMarkersOnChange();
     });
     //setting the sidebar to be opened when page loads
     $("a[href='#left_side_pannel']").trigger('click');
+    var zoom = 10;
+    map.setView([pos.lat, pos.lng], zoom);
+    // centerLeafletMapOnMarker(map, pos);
 }
 
+function centerLeafletMapOnMarker(map, latLngs) {
+    var markerBounds = L.latLngBounds([latLngs.lat, latLngs.lng]);
+    map.fitBounds(markerBounds);
+}
 
 var showMarkesOnZoomEnd = function (zoomLevel) {
      if(map.getZoom()===zoomLevel){
          showMarkersOnChange();
      }
-}
+};
 var showMarkersOnChange=function(){
     var bounds = map.getBounds();
     var maxLat = bounds._northEast.lat;
@@ -211,4 +242,167 @@ var successCallBackDeviceDetails=function(device){
     var deviceOwner = deviceJsonObject.enrolmentInfo.owner;
     popupContent = devicePopupManagement(deviceName,deviceType,deviceIdentifier,deviceStatus,deviceOwner);
 
-}
+};
+
+var getDeviceGrp = function () {
+    var gatewayId = $("#data-holder").attr("data-gatewayID");
+    var deviceName = $("#data-holder").attr("data-device-name");
+    var backEndUrl = '/monnit/1.0.0/monnit/devices?gatewayID=' + gatewayId + '&deviceName=' + encodeURI(deviceName);
+    invokerUtil.get(backEndUrl,function (result) {
+        var obj = jQuery.parseJSON(result);
+        var lastCommunicated;
+        var status = obj[0].devices[0].enrolmentInfo.status;
+        $.each(obj[0].devices[0].properties, function(key, value) {
+            if(value.name === 'LastCommunicationDate') {
+                lastCommunicated = value.value;
+            }
+        });
+        populateGatewayData(status, lastCommunicated);
+        populateSensorData(obj[0].devices);
+    },function (error) {
+        console.log("error when calling backend api to retrieve geo clusters");
+        console.log(error);
+    });
+};
+
+var loadMap = function () {
+    var gatewayId = $("#data-holder").attr("data-gatewayID");
+    var lat = $("#data-holder").attr("data-lat");
+    var lng = $("#data-holder").attr("data-lng");
+
+};
+
+var populateGatewayData = function (status, lastCommunicated) {
+    var content = '<tr role="row"> <td class="sorting_1" style="padding:10px 15px;">Status</td> <td class="sorting_1">'+status+'</td> </tr>'
+        + '<tr role="row"> <td class="sorting_1" style="padding:10px 15px;">Last Communicated</td> <td class="sorting_1">'+lastCommunicated+'</td> </tr>';
+    $("#gateway-table tbody").append(content);
+};
+
+var populateSensorData = function (devices) {
+    console.log(devices);
+    var dataArr = [];
+    var deviceIds = [];
+    var nameArr = [];
+    var checkDigitArr = [];
+    var readings = [];
+    var alertStatus = [];
+    var batteryLevel = [];
+    var signalStrength = [];
+    var application = [];
+    dataArr.push(nameArr);
+    dataArr.push(readings);
+    dataArr.push(checkDigitArr);
+    dataArr.push(signalStrength);
+    dataArr.push(batteryLevel);
+    $.each(devices, function(key, value) {
+
+        if(key > 0) {
+            deviceIds.push(devices[key].deviceIdentifier);
+            nameArr.push(value.name);
+            $.each(value.properties, function(key, value) {
+                if(value.name === 'CurrentReading') {
+                    var currentReading = value.value;
+                    if(currentReading === "No Reading Available") {
+                        currentReading = "N/A";
+                    }
+                    readings.push(currentReading);
+                } else if(value.name === 'AlertsActive') {
+                    alertStatus.push(value.value);
+                } else if(value.name === 'SignalStrength') {
+                    signalStrength.push(value.value);
+                } else if(value.name === 'BatteryLevel') {
+                    batteryLevel.push(value.value);
+                } else if(value.name === 'checkDigit') {
+                    checkDigitArr.push(value.value);
+                } else if(value.name === 'MonnitApplicationID') {
+                    application.push(value.value);
+                }
+            });
+        }
+    });
+    var html = '';
+    $.each(nameArr, function(key, value) {
+        var signalBar;
+        var batteryBar;
+
+        if(signalStrength[key]>50) {
+            signalBar = 'color:green';
+        } else {
+            signalBar = 'color:red';
+        }
+
+        if(batteryLevel[key]>50) {
+            batteryBar = 'color:green';
+        } else {
+            batteryBar = 'color:red';
+        }
+
+        var imgElement;
+        if(application[key]==2) {
+            imgElement = '<img style="padding-left: 10px" src="/cubexportal/public/cdmf.unit.geo-devices-map/img/rsz_temp1.png">';
+        }
+        
+        if(application[key]==43) {
+            imgElement = '<img style="padding-left: 10px" src="/cubexportal/public/cdmf.unit.geo-devices-map/img/rsz_humidity.png">';
+        }
+
+        html+= '<tr role="row" data-device-id="'+deviceIds[key]+'" data-device-name="' + nameArr[key] + '" onclick="tableCellAction(this)">'+
+        '<td style="width: 10%; padding-left: 30px;border: none">' + imgElement +'</td>'+
+        '<td style="border: none">'+ nameArr[key]+'</td>'+
+        '<td class="sorting_1" style="padding:10px 15px;border: none">'+ readings[key]+'</td>'+
+        '<td class="sorting_1" style="padding:10px 15px;border: none">'+ checkDigitArr[key]+'</td>'+
+        '<td class="sorting_1" style="padding:10px 15px;border: none"><p><span class="fw fw-wifi fw-1x" style="' + signalBar + '">&nbsp;'+ signalStrength[key]+'</span></p></td>'+
+        '<td class="sorting_1" style="padding:10px 15px;border: none"><p><span class="fw fw-battery" style="' + batteryBar + '">&nbsp;'+ batteryLevel[key]+'</span></p></td>'+
+        '<td class="sorting_1" style="width: 7%;border: none"><p><span class="fw fw-sort-down fw-1x"></span></p></td></tr>';
+    });
+    $('#sensor-data-table tbody').append(html);
+};
+var prev;
+var tableCellAction = function(obj) {
+    var deviceId = $(obj).attr("data-device-id");
+    var deviceName = $(obj).attr("data-device-name");
+    var span = $(obj).find('span')[2];
+    if(prev == deviceId) {
+        $("#analytics-section").toggle();
+        if($(span).hasClass('fw-sort-down')) {
+            $(span).removeClass('fw-sort-down');
+            $(span).addClass('fw-sort-up');
+        } else {
+            $(span).removeClass('fw-sort-up');
+            $(span).addClass('fw-sort-down');
+        }
+    } else {
+        $("#analytics-section").slideDown();
+        $(span).removeClass('fw-sort-down');
+        $(span).addClass('fw-sort-up');
+    }
+
+    var to = new Date().getTime()/1000;
+    var from  = new Date(new Date().getTime() - 1 * 60 * 60 * 1000).getTime()/1000;
+    drawGraph_monnit(Math.round(from), Math.round(to), deviceId, deviceName);
+    //TODO use token method
+    getNotifications(token, 10, deviceId);
+    prev = deviceId;
+};
+
+var getNotifications = function (token, minutes, sensorID) {
+    var backEndUrl = '/monnit/1.0.0/monnit/recent-notifications?token=' + token + '&minutes=' + minutes + '&sensorID=' + sensorID;
+    invokerUtil.get(backEndUrl,function (result) {
+        var obj = jQuery.parseJSON(result);
+        console.log(obj);
+        $('#notification-table tbody').empty();
+        var html = '';
+        $.each(obj, function(key, value) {
+            console.log(value.content);
+            if(value.content){
+                html += '<tr role="row"> ' +
+                '<td class="sorting_1" style="border: none;width: 1%;"> <span class="wr-hidden-operations-icon fw-stack" style="display: inline;float: left; padding-top: 15px"> <i class="fw fw-warning fw-stack-2x" style="color: darkorange"></i> </span> <span class="card-body" style="display: inline;float: left;"><h4 class="card-title">'+value.content+'</h4><p class="card-text" style="color:#ccc">' + value.notificationDate + '</p></span> </td> ' +
+                '</tr>';
+            }
+        });
+        $('#notification-table tbody').append(html);
+    },function (error) {
+        console.log("error when calling backend api to retrieve geo clusters");
+        console.log(error);
+    });
+};

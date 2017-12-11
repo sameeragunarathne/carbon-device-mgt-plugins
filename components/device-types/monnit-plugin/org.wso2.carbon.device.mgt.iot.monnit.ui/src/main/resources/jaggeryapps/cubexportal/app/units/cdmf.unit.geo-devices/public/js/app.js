@@ -17,10 +17,16 @@
  */
 
 var token;
+var applications = {
+    "2" : "Temperature",
+    "43" : "Humidity",
+    "1" : "Voltage"
+}
 
 $(document).ready(function () {
     initialLoad(false);
     getToken();
+    getDevicesList();
 });
 
 /**
@@ -87,7 +93,7 @@ function initializeMap() {
     //     marker: false,
     //     textPlaceholder: 'search...'
     // });
-    //
+
     // map.addControl(controlSearch);
 
     var selectedMarker = L.AwesomeMarkers.icon({
@@ -114,6 +120,7 @@ function initializeMap() {
     map.on('dragend',function(){
         showMarkersOnChange();
     });
+
     //setting the sidebar to be opened when page loads
     $("a[href='#left_side_pannel']").trigger('click');
 }
@@ -195,6 +202,7 @@ function geoClusterMarker(count, clusterLat, clusterLong, minLat, maxLat, minLon
     marker.addTo(markersLayer);
 }
 
+var globalMarker;
 function handleMarkerEvents(event,extra_data,marker) {
     if(event.type==="click") {
         var southWestCorner = L.latLng(extra_data.minLat, extra_data.minLong);
@@ -205,25 +213,71 @@ function handleMarkerEvents(event,extra_data,marker) {
         var deviceType = extra_data.deviceType;
         var deviceIdentification = extra_data.deviceIdentification;
         devicePopupContentBackEndCall(deviceType,deviceIdentification,marker,function () {
-            marker.bindPopup(popupContent);
-            marker.openPopup();
+            globalMarker = marker;
+            // marker.openPopup();
+           // $($(document).find(".leaflet-popup-content")).width('400px');
         });
     }
-
 }
 
-var devicePopupManagement= function(deviceName, deviceType, deviceIdentifier,deviceStatus,deviceOwner){
+var devicePopupManagement= function(deviceName, deviceType, deviceIdentifier,deviceStatus,deviceOwner,lat,lng){
 
-    var deviceMgtUrl= "/devicemgt/device/";
-    var html1='<div>';
-    var html2 = '<p><h3>'+'<a href="' + deviceMgtUrl +deviceType+'?id='+deviceIdentifier+ '" target="_blank">' + deviceName + '</a>'+'</h3></p>' ;
-    var html3 = '<p>'+'Type : '+ deviceType+'</p>';
-    var html4 = '<p>'+'Status : '+deviceStatus+'</p>';
-    var html5 = '<p>'+ 'Owner : ' + deviceOwner + '</p>';
-    var html6='</div>';
-    var html=html1+html2+html3+html4+html5+html6;
-    return html;
+    var backEndUrl = '/monnit/1.0.0/monnit/devices/group?gatewayID=' + deviceIdentifier + '&deviceName=' + encodeURI(deviceName);
+
+    invokerUtil.get(backEndUrl,function (result) {
+        var deviceName = result;
+        backEndUrl = '/monnit/1.0.0/monnit/devices?gatewayID=' + deviceIdentifier + '&deviceName=' + encodeURI(deviceName);
+        invokerUtil.get(backEndUrl,function (result) {
+            var obj = jQuery.parseJSON(result);
+            console.log(obj);
+            var deviceMgtUrl= "/cubexportal/device-details/"+'?id=' + deviceIdentifier + '&deviceName=' + deviceName + '&lat='+lat+'&lng='+lng+'';
+            var cardContent = '<div id="location-marker-card" class="" style="width:100%"> ' +
+                '<div class="card-block" style="width: 400px; padding-bottom: 5px"> <h4 style="display: inline">'+ obj[0].deviceGroup.name +'</h4> <span style="display: inline;float: right;margin-right: 10px"><a href="'+deviceMgtUrl+'" class="card-link">View Details</a></span> </div>' +
+                '<span class="divider"></span><div class="card-block" style="width: 400px">';
+            $.each(obj[0].devices, function(key, value) {
+                if(key>0){
+                    cardContent+='<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 "> <div class="well well-sm"> <h4>'+value.properties[4].value+'</h4> <p>'+ applications[""+value.properties[13].value+""] + ' <span style=" float:right;color: limegreen"><i class="fa fa-check"></i> Active</span></p> </div> </div>';
+                    if(key%2==0) {
+                        cardContent+='</div><div class="row">';
+                    }
+                } else {
+                    cardContent+='<div class="row">';
+                }
+            });
+            cardContent+='</div>' ;
+                // +'<div class="card-block" style="width: 400px; padding-bottom: 5px"><span style="display: inline;float: right;margin-right: 10px;" style="color: red" onclick="removeDevice("'+obj[0].deviceGroup.name +'")">Remove</span></div>';
+            var content = '<div id="location-marker-card" class="" style="width:100%"> ' +
+                '<div class="card-block" style="width: 400px"> <h4 style="display: inline">Mt Saint Device</h4> <span style="display: inline;float: right;margin-right: 10px"><a href="#" class="card-link">Another link</a></span> </div>' +
+                '<div class="card-block" style="width: 400px"> <div class="row"> <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 "> <div class="well well-sm"> <h4>300mV</h4> <p>Volt <span style=" float:right;color: limegreen"><i class="fa fa-check"></i> Active</span></p> </div> </div> ' +
+                '<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6"> <div class="well well-sm"> <h4>30C</h4> <p>Temp <span style=" float:right;color: limegreen"><i class="fa fa-check"></i> Active</span></p> </div> </div> </div> '
+            // '<div class="row"> <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6"> <div class="well well-sm"> <h4>+2%</h4> <p>Humidity</p> </div> </div> <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6"> <div class="well well-sm"> <h4>+2%</h4> <p>Humidity</p> </div> </div> </div> </div> </div>';
+            var content2 = '<div class="card-block" style="width: 400px"> <h4 style="display: inline">Mt Saint Device</h4> <span style="display: inline;float: right;margin-right: 10px"><a href="#" class="card-link">Another link</a></span> </div>';
+            popupContent = cardContent;
+            globalMarker.bindPopup(popupContent,{
+                maxWidth: 500});
+            globalMarker.openPopup();
+            $($(document).find(".leaflet-popup-content")).width('400px');
+            var metrix = $(document).find(".leaflet-popup.leaflet-zoom-animated").css('transform');
+            var temp = metrix.replace("matrix(", "");
+            var offset = 100;
+            var res = temp.split(",");
+            var transform = parseInt(res[4]) - offset;
+            metrix = metrix.replace(res[4],transform+"");
+            $(document).find(".leaflet-popup.leaflet-zoom-animated").css('transform', metrix);
+        },function (error) {
+            console.log("error when calling backend api to retrieve geo clusters");
+            console.log(error);
+        });
+    },function (error) {
+        console.log("error when calling backend api to retrieve geo clusters");
+        console.log(error);
+    });
+
 };
+
+var removeDevice = function (device) {
+    console.log(device);
+}
 
 var devicePopupContentBackEndCall = function(type,deviceIdentification,marker,callback){
     var popupContentBackEndUrl='/api/device-mgt/v1.0/devices/1.0.0/'+type+'/'+deviceIdentification;
@@ -241,7 +295,9 @@ var successCallBackDeviceDetails=function(device){
     var deviceIdentifier = deviceJsonObject.deviceIdentifier;
     var deviceStatus = deviceJsonObject.enrolmentInfo.status;
     var deviceOwner = deviceJsonObject.enrolmentInfo.owner;
-    popupContent = devicePopupManagement(deviceName,deviceType,deviceIdentifier,deviceStatus,deviceOwner);
+    var lat = deviceJsonObject.deviceInfo.location.latitude;
+    var lng = deviceJsonObject.deviceInfo.location.longitude;
+    devicePopupManagement(deviceName,deviceType,deviceIdentifier,deviceStatus,deviceOwner, lat, lng);
 };
 
 var loadEnrollDeviceForm = function () {
@@ -270,6 +326,8 @@ var hideEnrollDeviceForm = function () {
     $("#device-map-wrapper").addClass("col-lg-12");
     $("#device-map-wrapper").addClass("col-sm-12");
     $("#device-map-wrapper").addClass("col-xs-12");
+    $('#sensors').find('option').remove();
+    $('#gateways').find('option').remove();
 };
 
 var getLocationName = function (latlng) {
@@ -290,18 +348,17 @@ var getLocationName = function (latlng) {
 };
 
 var getToken = function () {
-    var backEndUrl = '/monnit/1.0.0/monnit/auth-token';
-    invokerUtil.get(backEndUrl,function (result) {
-        token = result;
-    },function (error) {
-        console.log("error when calling backend api to retrieve geo clusters");
-        console.log(error);
-    });
+    token = $('#nav-bar-span').attr('data-token');
+    if($("#nav-bar-span").attr('data-logged-in') != "true") {
+        loadInitialDevices();
+    }
 };
 
 var saveDevice = function () {
-    var backEndUrl = '/monnit/1.0.0/monnit/devices?gatewayID=' + $("#gateways").val() + '&deviceName=' + encodeURI($("#device-name").val());
+    var backEndUrl = '/monnit/1.0.0/monnit/devices';
     var device = {
+        "gatewayID": $("#gateways").val(),
+        "deviceName": $("#device-name").val(),
         "sensorIds" : $("#sensors").val(),
         "location" : {
             "latitude" : $("#device-location-input").attr("data-latitude"),
@@ -310,16 +367,20 @@ var saveDevice = function () {
     };
     invokerUtil.post(backEndUrl, device, function (result) {
         console.log(result);
+        $("#modalDevice").modal('show');
+        hideEnrollDeviceForm();
     },function (error) {
         console.log("error when calling backend api to retrieve geo clusters");
         console.log(error);
+        $("#modalDevice").modal('show');
+        hideEnrollDeviceForm();
     });
 };
 
 var getSensorList = function () {
     var backEndUrl = '/monnit/1.0.0/monnit/sensors?token=' + token;
     invokerUtil.get(backEndUrl,function (result) {
-        var obj = jQuery.parseJSON(result)
+        var obj = jQuery.parseJSON(result);
         $.each(obj, function(key, value) {
             $("#sensors").append( $("<option>")
                 .val(value.SensorID)
@@ -349,3 +410,67 @@ var getGatewayList = function () {
         console.log(error);
     });
 };
+
+var loadInitialDevices = function () {
+    var backEndUrl = '/monnit/1.0.0/monnit/init?token=' + token;
+    invokerUtil.get(backEndUrl,function (result) {
+        console.log(result);
+    },function (error) {
+        console.log("error when calling backend api to retrieve geo clusters");
+        console.log(error);
+    });
+};
+
+
+var deviceList=[];
+var getDevicesList = function () {
+    var backEndUrl = '/monnit/1.0.0/monnit/devices?gatewayID=0&deviceName=';
+    invokerUtil.get(backEndUrl, function (result) {
+        var obj = jQuery.parseJSON(result);
+        // console.log(obj);
+        $.each(obj, function(key, value) {
+            var deviceGrpName = value.deviceGroup.name;
+            var deviceGrpId = value.deviceGroup.id;
+            if(deviceGrpName!="BYOD" && deviceGrpName!="COPE") {
+                $('#searchresults').append('<option style="font-weight: normal">'+deviceGrpName+'</option>');
+                if(value.devices[0]){
+                    if(value.devices[0].deviceInfo.location) {
+                            var location = value.devices[0].deviceInfo.location;
+                            var device = {
+                                "id": deviceGrpId,
+                                "name" : deviceGrpName,
+                                "location" : location
+                            };
+                            deviceList.push(device);
+                    }
+                }
+            }
+        });
+        document.getElementById('search-input').addEventListener('input', function () {
+            var val = $('#search-input').val();
+            var result = $.grep(deviceList, function(e){ return e.name == val; });
+            console.log(result);
+            var corner1 = L.latLng(result[0].location.latitude, result[0].location.longitude),
+                corner2 = L.latLng(result[0].location.latitude, result[0].location.longitude),
+                bounds = L.latLngBounds(corner1, corner2);
+            map.fitBounds(bounds);
+        });
+        // var search = document.querySelector('#search-input');
+        // var results = document.querySelector('#searchresults');
+        //
+        // search.addEventListener('keyup', function handler(event) {
+        //     var templateContent = document.querySelector('#resultstemplate').content;
+        //     while (results.children.length) results.removeChild(results.firstChild);
+        //     var inputVal = new RegExp(search.value.trim(), 'i');
+        //     var clonedOptions = templateContent.cloneNode(true);
+        //     var set = Array.prototype.reduce.call(clonedOptions.children, function searchFilter(frag, el) {
+        //         if (inputVal.test(el.textContent) && frag.children.length < 5) frag.appendChild(el);
+        //         return frag;
+        //     }, document.createDocumentFragment());
+        //     results.appendChild(set);
+        // });
+    },function (error) {
+        console.log("error occured");
+    });
+};
+
